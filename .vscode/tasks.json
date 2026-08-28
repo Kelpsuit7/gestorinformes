@@ -1,0 +1,270 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "npm install electron",
+			"type": "shell",
+			"command": "npm install",
+			"isBackground": false
+		},
+		{
+			"label": "npm start electron",
+			"type": "shell",
+			"command": "npm start",
+			"isBackground": false
+		},
+		{
+			"label": "ejecutar con npx electron",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "ejecutar electron dashboard",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron with titles",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron dynamic dashboard",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron dashboard",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "electron run",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron navigation",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron navigation",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "electron app run",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron snippets",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron snippets dynamic",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron snippets dynamic",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron no sidebar",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron snippets header",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron huellitas logo",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron logo png",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron logo png",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "electron logo png run",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron logo search",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron search longer",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron centered search",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron wider search",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run electron current",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"electron@30.5.1",
+				"."
+			],
+			"isBackground": false
+		}
+	]
+}
