@@ -5389,6 +5389,125 @@ a > .ui-icon { align-self: center; flex: 0 0 auto; }
 
 /* Las secciones funcionan como vistas, no como una lista continua */
 .designer-toolbox .is-sidebar-section-hidden { display: none !important; }
+
+/* Productividad clínica: pacientes, checklist, respaldos y modos del diseñador */
+.summary-row { grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); }
+.quick-actions { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.quick-actions .action-card[hidden] { display: none !important; }
+.editor-header { gap: 14px; }
+.editor-actions { flex-wrap: wrap; justify-content: flex-end; }
+.editor-actions .editor-action-btn { white-space: nowrap; }
+.config-navigation-list { min-width: 0; }
+.config-action-tile.featured { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface-raised)); }
+
+.patients-shell { min-height: 100vh; padding-bottom: 36px; background: var(--app-bg); }
+.patients-panel { margin: 22px clamp(20px, 3vw, 44px); }
+.patients-toolbar { margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.patients-toolbar .profiles-search { width: min(620px, 100%); }
+.patients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.patients-grid > .activity-empty { grid-column: 1 / -1; min-height: 180px; display: grid; place-items: center; align-content: center; gap: 5px; text-align: center; }
+.patients-grid > .activity-empty strong, .patients-grid > .activity-empty span { display: block; }
+.patient-card { padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 15px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-soft); }
+.patient-card-main { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.patient-avatar { width: 46px; height: 46px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 14px; background: var(--accent-soft); color: var(--accent-hover); font-size: 20px; font-weight: 900; }
+.patient-card h3 { margin: 0; color: var(--text-dark); font-size: 17px; }
+.patient-card p, .patient-card small { margin: 2px 0 0; display: block; overflow: hidden; color: var(--text-soft); text-overflow: ellipsis; white-space: nowrap; }
+.patient-card-status { min-width: 62px; display: grid; place-items: center; align-content: center; border-left: 1px solid var(--line); color: var(--text-soft); }
+.patient-card-status strong { color: var(--accent-hover); font-size: 22px; }
+.patient-card-status span { font-size: 9px; text-transform: uppercase; }
+.patient-card-actions { grid-column: 1 / -1; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 7px; border-top: 1px solid var(--line); }
+.patient-card-actions button, .snippet-card button, .version-item button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text-soft); font-weight: 800; cursor: pointer; }
+.patient-card-actions button:hover, .snippet-card button:hover, .version-item button:hover { border-color: var(--accent); color: var(--accent-hover); }
+.patient-card-actions button.is-danger, .snippet-card button.is-danger { margin-left: auto; color: var(--danger); }
+
+.productivity-dialog { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--surface-raised); box-shadow: 0 26px 80px rgba(18, 31, 38, .28); }
+.productivity-dialog > header { position: sticky; top: 0; z-index: 2; padding: 20px 22px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); background: var(--surface-raised); }
+.productivity-dialog > header h2 { margin: 0; color: var(--text-dark); }
+.productivity-dialog > header p { margin: 4px 0 0; color: var(--text-soft); }
+.productivity-dialog > header > button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: var(--surface-soft); color: var(--text-soft); font-size: 22px; cursor: pointer; }
+.patient-form { padding: 20px 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.patient-form label, .snippet-form label { display: grid; gap: 6px; color: var(--text-soft); font-size: 11px; font-weight: 800; }
+.patient-form .patient-notes, .patient-form footer { grid-column: 1 / -1; }
+.patient-form footer { padding-top: 8px; display: flex; justify-content: flex-end; gap: 8px; }
+.selector-productivity-dialog { padding-bottom: 18px; }
+.selector-productivity-dialog > .profiles-search { margin: 18px 20px 10px; width: calc(100% - 40px); }
+.selector-productivity-list { padding: 8px 20px 18px; display: grid; gap: 8px; }
+.selector-productivity-item { width: 100%; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--text-dark); text-align: left; cursor: pointer; }
+.selector-productivity-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+.selector-productivity-item span { min-width: 0; display: grid; gap: 3px; }
+.selector-productivity-item small { overflow: hidden; color: var(--text-soft); text-overflow: ellipsis; white-space: nowrap; }
+.selector-productivity-item b { color: var(--accent-hover); }
+.selector-productivity-dialog > footer { padding: 0 20px; display: flex; justify-content: flex-end; }
+
+.snippet-form { display: grid; grid-template-columns: minmax(160px, .45fr) 1fr; gap: 13px; }
+.snippet-content-field, .snippet-form .report-label-form-actions { grid-column: 1 / -1; }
+.snippet-form textarea { min-height: 120px; resize: vertical; }
+.snippets-list { margin-top: 20px; display: grid; gap: 10px; }
+.snippet-card { padding: 15px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.snippet-card code { padding: 3px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-hover); }
+.snippet-card h3 { margin: 8px 0 3px; color: var(--text-dark); }
+.snippet-card p { margin: 0; color: var(--text-soft); white-space: pre-wrap; }
+.snippet-card > span { display: flex; gap: 6px; }
+
+.report-checklist { position: fixed; top: 0; right: 0; z-index: 1300; width: min(420px, 100vw); height: 100vh; padding: 22px; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 16px; border-left: 1px solid var(--line); background: var(--surface-raised); box-shadow: -22px 0 70px rgba(18, 31, 38, .2); transform: translateX(105%); transition: transform .22s ease; }
+.report-checklist.is-open { transform: translateX(0); }
+.report-checklist header { display: flex; align-items: flex-start; justify-content: space-between; }
+.report-checklist header span { color: var(--accent); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.report-checklist h2 { margin: 3px 0 0; color: var(--text-dark); }
+.report-checklist header button { border: 0; background: transparent; color: var(--text-soft); font-size: 24px; cursor: pointer; }
+.checklist-progress { display: grid; gap: 8px; }
+.checklist-progress > div { display: flex; align-items: baseline; justify-content: space-between; color: var(--text-soft); }
+.checklist-progress-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-soft); }
+.checklist-progress-track i { height: 100%; display: block; border-radius: inherit; background: var(--accent); transition: width .2s ease; }
+.checklist-items { min-height: 0; overflow: auto; display: grid; align-content: start; gap: 8px; }
+.checklist-item { padding: 11px; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text-dark); text-align: left; }
+.checklist-item:not(:disabled) { cursor: pointer; }
+.checklist-item > span:first-child { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 8px; background: var(--surface-soft); font-weight: 900; }
+.checklist-item > span:last-child { display: grid; gap: 2px; }
+.checklist-item small { color: var(--text-soft); }
+.checklist-item.is-ok > span:first-child { background: var(--accent-soft); color: var(--accent-hover); }
+.checklist-item.is-missing { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
+.checklist-item.is-missing > span:first-child { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); color: var(--danger); }
+.report-checklist footer { display: flex; justify-content: flex-end; gap: 8px; }
+
+.version-item { padding: 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.version-item > span { display: grid; gap: 3px; }
+.version-item small { color: var(--text-soft); }
+.version-item details { margin-top: 7px; color: var(--text-soft); font-size: 11px; }
+.version-item summary { color: var(--accent-hover); font-weight: 800; cursor: pointer; }
+.version-item details p { margin: 7px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--surface-soft); white-space: pre-wrap; }
+.patient-compare-content { padding: 20px 22px 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.patient-compare-content section { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.patient-compare-content section > span { color: var(--accent-hover); font-size: 9px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.patient-compare-content h3 { margin: 0 0 3px; color: var(--text-dark); }
+.patient-compare-content small { color: var(--text-soft); }
+.patient-compare-content h4 { margin: 16px 0 5px; color: var(--text-soft); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.patient-compare-content p { margin: 0; color: var(--text-dark); line-height: 1.5; white-space: pre-wrap; }
+.pdf-success-dialog { width: min(620px, calc(100vw - 32px)); }
+.pdf-success-dialog header p { max-width: 500px; overflow-wrap: anywhere; }
+.pdf-success-actions { padding: 22px; display: flex; flex-wrap: wrap; gap: 9px; }
+
+html[data-designer-mode="basic"] .designer-toolbox .designer-assistant,
+html[data-designer-mode="basic"] .designer-toolbox [data-designer-section="avanzado"] { display: none !important; }
+.designer-mode-toggle { min-width: 118px; justify-content: center; }
+.designer-zoom-controls { min-height: 36px; display: inline-flex; align-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.designer-zoom-controls button { align-self: stretch; padding: 0 10px; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--text-soft); font-weight: 900; cursor: pointer; }
+.designer-zoom-controls button:first-child { border-left: 0; }
+.designer-zoom-controls button:hover { background: var(--accent-soft); color: var(--accent-hover); }
+.designer-zoom-controls span { min-width: 49px; padding: 0 7px; color: var(--text-dark); font-size: 11px; font-weight: 900; text-align: center; }
+
+@media (max-width: 1250px) {
+  .summary-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .editor-header { grid-template-columns: auto minmax(180px, 1fr); }
+  .editor-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .summary-row, .patients-grid, .patient-form, .snippet-form, .patient-compare-content { grid-template-columns: 1fr; }
+  .patient-form .patient-notes, .patient-form footer, .snippet-content-field, .snippet-form .report-label-form-actions { grid-column: auto; }
+  .patient-card { grid-template-columns: 1fr; }
+  .patient-card-status { padding-top: 10px; grid-auto-flow: column; justify-content: start; gap: 5px; border-top: 1px solid var(--line); border-left: 0; }
+  .patients-toolbar, .snippet-card, .version-item { align-items: stretch; flex-direction: column; }
+}
 .designer-toolbox > :is(.designer-navigator, .designer-controls-section, .designer-assistant, #designerCatalogPanel, #designerBlockPanel):not(.is-sidebar-section-hidden) {
   animation: designerSidebarViewIn .16s ease both;
 }
@@ -5426,3 +5545,8 @@ a > .ui-icon { align-self: center; flex: 0 0 auto; }
   background: var(--accent);
   color: var(--accent-contrast);
 }
+
+/* Im?genes de plantilla sin m?rgenes internos, compartidas por editor y PDF. */
+.layout-block.bloque-banner { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent !important; min-height: 0; }
+.template-banner-image { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.template-banner-placeholder { display: grid; place-items: center; height: 100%; border: 1px dashed #82948a; color: #4c626c; background: #eef3ef; font-size: 14px; text-align: center; }

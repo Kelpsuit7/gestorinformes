@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -57,7 +57,7 @@ function abrirManualUsuario() {
 }
 
 function activarRecargaAutomatica() {
-  const archivos = ['index.html', 'styles.css', 'renderer.js', 'preload.js'];
+  const archivos = ['index.html', 'styles.css', 'app-core.js', 'renderer.js', 'productivity.js', 'preload.js'];
 
   archivos.forEach((archivo) => {
     fs.watch(path.join(__dirname, archivo), () => {
@@ -71,13 +71,19 @@ function activarRecargaAutomatica() {
   });
 }
 
-ipcMain.handle('guardar-pdf', async (event, nombreSugerido) => {
+ipcMain.handle('guardar-pdf', async (event, opciones) => {
   const ventana = BrowserWindow.fromWebContents(event.sender);
   if (!ventana) return { ok: false, error: 'No se encontro la ventana activa.' };
 
+  const nombreSugerido = typeof opciones === 'string' ? opciones : opciones?.nombreSugerido;
+  const directorioInicial = typeof opciones === 'object' ? String(opciones?.directorioInicial || '') : '';
+  const rutaSugerida = directorioInicial && path.isAbsolute(directorioInicial)
+    ? path.join(directorioInicial, path.basename(nombreSugerido || 'informe.pdf'))
+    : nombreSugerido || 'informe.pdf';
+
   const resultado = await dialog.showSaveDialog(ventana, {
     title: 'Guardar informe como PDF',
-    defaultPath: nombreSugerido || 'informe.pdf',
+    defaultPath: rutaSugerida,
     filters: [{ name: 'PDF', extensions: ['pdf'] }]
   });
 
@@ -94,6 +100,42 @@ ipcMain.handle('guardar-pdf', async (event, nombreSugerido) => {
 
   await fs.promises.writeFile(resultado.filePath, pdf);
   return { ok: true, filePath: resultado.filePath };
+});
+
+ipcMain.handle('abrir-ruta', async (_event, ruta) => {
+  const rutaSegura = path.resolve(String(ruta || ''));
+  if (!ruta || !path.isAbsolute(rutaSegura) || !fs.existsSync(rutaSegura)) return { ok: false, error: 'El archivo ya no existe.' };
+  const error = await shell.openPath(rutaSegura);
+  return error ? { ok: false, error } : { ok: true };
+});
+
+ipcMain.handle('mostrar-en-carpeta', (_event, ruta) => {
+  const rutaSegura = path.resolve(String(ruta || ''));
+  if (!ruta || !path.isAbsolute(rutaSegura) || !fs.existsSync(rutaSegura)) return { ok: false, error: 'El archivo ya no existe.' };
+  shell.showItemInFolder(rutaSegura);
+  return { ok: true };
+});
+
+ipcMain.handle('guardar-respaldo-automatico', async (_event, respaldo) => {
+  if (!respaldo || respaldo.product !== 'Generador de Informes' || typeof respaldo.entries !== 'object') return { ok: false, error: 'Respaldo inválido.' };
+  const directorio = path.join(app.getPath('userData'), 'backups');
+  const destino = path.join(directorio, 'respaldo-integral-automatico.json');
+  const temporal = path.join(directorio, 'respaldo-integral-automatico.tmp');
+  await fs.promises.mkdir(directorio, { recursive: true });
+  await fs.promises.writeFile(temporal, JSON.stringify({ savedAt: new Date().toISOString(), backup: respaldo }), 'utf8');
+  await fs.promises.rename(temporal, destino);
+  return { ok: true, savedAt: new Date().toISOString() };
+});
+
+ipcMain.handle('cargar-respaldo-automatico', async () => {
+  const destino = path.join(app.getPath('userData'), 'backups', 'respaldo-integral-automatico.json');
+  try {
+    const contenido = await fs.promises.readFile(destino, 'utf8');
+    return { ok: true, data: JSON.parse(contenido) };
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return { ok: false, missing: true };
+    return { ok: false, error: error.message };
+  }
 });
 
 ipcMain.handle('abrir-manual-usuario', () => {

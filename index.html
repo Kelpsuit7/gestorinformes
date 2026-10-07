@@ -72,7 +72,7 @@
           <img class="brand-logo" src="logo.png" alt="Huellitas Hospital Clinico Veterinario" />
           <label class="search-wrap search-wrap-inline" for="searchInput">
             <span class="search-icon"><svg class="ui-icon"><use href="#icon-search"></use></svg></span>
-            <input id="searchInput" type="search" placeholder="Buscar informes, equipos o codigos..." />
+            <input id="searchInput" type="search" placeholder="Buscar por paciente, tutor, fecha o informe…" />
           </label>
         </div>
         <button class="settings-corner-btn" type="button" onclick="showConfiguracion()" title="Configuración" aria-label="Configuración"><svg class="ui-icon"><use href="#icon-settings"></use></svg></button>
@@ -85,6 +85,24 @@
             <p class="summary-title">Informes creados</p>
             <p id="informesCount" class="summary-value">0</p>
             <p id="informesCaption" class="summary-caption"></p>
+          </article>
+          <article class="summary-card summary-card-drafts">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
+            <p class="summary-title">Borradores pendientes</p>
+            <p id="draftsCount" class="summary-value">0</p>
+            <p id="draftsCaption" class="summary-caption">Sin trabajo pendiente.</p>
+          </article>
+          <article class="summary-card summary-card-week">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"></use></svg></span>
+            <p class="summary-title">Completados esta semana</p>
+            <p id="completedWeekCount" class="summary-value">0</p>
+            <p id="completedWeekCaption" class="summary-caption">Actividad de los últimos 7 días.</p>
+          </article>
+          <article class="summary-card summary-card-export">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-file"></use></svg></span>
+            <p class="summary-title">Pendientes de exportar</p>
+            <p id="pendingExportCount" class="summary-value">0</p>
+            <p id="pendingExportCaption" class="summary-caption">Completados sin PDF reciente.</p>
           </article>
           <article class="summary-card">
             <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-layout"></use></svg></span>
@@ -113,10 +131,10 @@
           </button>
         </section>
 
-        <section class="activity" aria-label="Actividad reciente">
+        <section class="activity" aria-label="Informes recientes">
           <div class="activity-head">
-            <h2>Actividad Reciente</h2>
-            <span class="activity-badge">Hoy</span>
+            <h2>Informes recientes</h2>
+            <span class="activity-badge">Todos</span>
           </div>
 
           <div class="activity-table" role="table" aria-label="Ultimos informes">
@@ -790,6 +808,7 @@
             </div></details>
             <details class="designer-category"><summary><span>Imágenes</span><small>2</small></summary><div>
               <button data-block-label="Cuadrícula imágenes fotografías" type="button" onclick="agregarBloquePlantilla('bloque-imagenes-grid')"><span><svg class="ui-icon"><use href="#icon-grid"></use></svg></span>Cuadrícula de imágenes</button>
+              <button data-block-label="Imagen banner horizontal" type="button" onclick="agregarBloquePlantilla('bloque-banner')"><span><svg class="ui-icon"><use href="#icon-image"></use></svg></span>Imagen / banner</button>
               <button data-block-label="Logo clínica imagen" type="button" onclick="agregarBloquePlantilla('bloque-logo')"><span><svg class="ui-icon"><use href="#icon-image"></use></svg></span>Logo de la clínica</button>
             </div></details>
             <details class="designer-category"><summary><span>Identidad</span><small>3</small></summary><div>
@@ -873,8 +892,8 @@
         <h2 id="tutorialTitle">¿Qué quieres aprender?</h2>
         <p>Te mostraremos cada herramienta dentro de la aplicación. No se modificarán tus informes ni plantillas.</p>
         <div class="tutorial-route-list">
-          <button type="button" onclick="comenzarTutorialInteractivo('esencial')"><span><strong>Recorrido esencial</strong><small>Lo imprescindible para comenzar · 6 pasos</small></span><b>3 min</b></button>
-          <button type="button" onclick="comenzarTutorialInteractivo('completo')"><span><strong>Recorrido completo</strong><small>Organización, diseño y configuración</small></span><b>6 min</b></button>
+          <button type="button" onclick="comenzarTutorialInteractivo('esencial')"><span><strong>Recorrido esencial</strong><small>Lo imprescindible para comenzar · 8 pasos</small></span><b>5 min</b></button>
+          <button type="button" onclick="comenzarTutorialInteractivo('completo')"><span><strong>Recorrido completo</strong><small>Organización, diseño y configuración</small></span><b>7 min</b></button>
           <button id="tutorialResumeButton" class="tutorial-resume-route" type="button" onclick="reanudarTutorialInteractivo()" style="display:none"><span><strong>Continuar donde quedé</strong><small id="tutorialResumeCaption"></small></span><b>Continuar</b></button>
         </div>
         <p class="tutorial-privacy-note">Puedes salir con <kbd>Esc</kbd> y continuar más tarde.</p>
@@ -907,6 +926,8 @@
     </section>
   </div>
 
+  <script src="app-core.js"></script>
   <script src="renderer.js"></script>
+  <script src="productivity.js"></script>
 </body>
 </html>

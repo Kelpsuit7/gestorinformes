@@ -260,6 +260,7 @@ function cargarInformesGuardados() {
 function persistirInformes() {
   localStorage.setItem('informesGuardados', JSON.stringify(estadoDashboard.informes));
   localStorage.setItem('papeleraInformes', JSON.stringify(estadoDashboard.papeleraInformes));
+  window.programarRespaldoIntegralAutomatico?.();
 }
 
 /**
@@ -330,6 +331,7 @@ function guardarPerfiles() {
   } catch (error) {
     console.warn('No fue posible actualizar el respaldo automático de plantillas:', error);
   }
+  window.programarRespaldoIntegralAutomatico?.();
 }
 
 function marcarDisenadorConCambios() {
@@ -681,6 +683,7 @@ function obtenerTituloPredeterminadoBloque(tipo) {
     'bloque-imagenes-grid': 'Imágenes',
     'bloque-identidad': 'Identidad profesional',
     'bloque-logo': 'Logo',
+    'bloque-banner': 'Imagen / banner',
     'bloque-clinica': 'Nuestra clínica',
     'bloque-diplomados': 'Diplomados',
     'bloque-figura': 'Figura'
@@ -761,7 +764,7 @@ function normalizarCapasBloques(bloques) {
 
 function normalizarBloquePerfil(bloque = {}, indice = 0, paginaPredeterminada = null) {
   const migracionTipos = { 'text-rich': 'bloque-texto-libre', 'table-mediciones': 'bloque-tabla-moderna', 'images-page': 'bloque-imagenes-grid' };
-  const tiposValidos = ['bloque-titulo-principal', 'bloque-texto-libre', 'bloque-encabezado', 'bloque-tabla-moderna', 'bloque-datos-paciente', 'bloque-imagenes-grid', 'bloque-identidad', 'bloque-logo', 'bloque-clinica', 'bloque-diplomados', 'bloque-figura'];
+  const tiposValidos = ['bloque-titulo-principal', 'bloque-texto-libre', 'bloque-encabezado', 'bloque-tabla-moderna', 'bloque-datos-paciente', 'bloque-imagenes-grid', 'bloque-identidad', 'bloque-logo', 'bloque-clinica', 'bloque-diplomados', 'bloque-figura', 'bloque-banner'];
   let tipo = tiposValidos.includes(bloque.tipo) ? bloque.tipo : (migracionTipos[bloque.tipo] || 'bloque-texto-libre');
   const contenidoAnterior = bloque.contenidoDefecto !== undefined ? bloque.contenidoDefecto : bloque.contenido;
   if (tipo === 'bloque-identidad' && contenidoAnterior === 'logo') tipo = 'bloque-logo';
@@ -787,6 +790,8 @@ function normalizarBloquePerfil(bloque = {}, indice = 0, paginaPredeterminada = 
       : tipo === 'bloque-diplomados'
         ? filtroDiplomados
         : String(contenidoAnterior || ''),
+    imagenSrc: normalizarImagenBanner(bloque.imagenSrc),
+    imagenProporcion: Number(bloque.imagenProporcion) > 0 && Number.isFinite(Number(bloque.imagenProporcion)) ? Number(bloque.imagenProporcion) : 5,
     camposPaciente: tipo === 'bloque-datos-paciente' ? normalizarCamposPaciente(bloque.camposPaciente) : [],
     figuraTipo: normalizarTipoFigura(bloque.figuraTipo || contenidoAnterior),
     figuraColor: normalizarColorFondo(bloque.figuraColor, '#4c626c'),
@@ -1189,6 +1194,7 @@ function limpiarDiplomadosPredeterminadosGuardados() {
 
 function persistirAjustes() {
   localStorage.setItem('ajustesApp', JSON.stringify(ajustesApp));
+  window.programarRespaldoIntegralAutomatico?.();
 }
 
 function normalizarTemaAplicacion(tema) {
@@ -1242,6 +1248,7 @@ function cambiarModoTema(activarOscuro) {
 const SECCIONES_CONFIGURACION = {
   apariencia: 'Personaliza temas, colores y el ambiente visual del sistema.',
   etiquetas: 'Crea los nombres y colores que reutilizas en tus plantillas.',
+  textos: 'Guarda frases, hallazgos y conclusiones clínicas reutilizables.',
   identidad: 'Administra tus datos profesionales, firma e identidad de la clínica.',
   sistema: 'Respalda, importa o restablece los datos locales de la aplicación.',
   ayuda: 'Aprende a utilizar el sistema con el tutorial y el manual de usuario.'
@@ -1771,6 +1778,7 @@ function crearContenidoBloqueMaquetacion(bloque, modoDisenador = false) {
   if (bloque.tipo === 'bloque-tabla-moderna') return `${titulo}${modoDisenador ? crearHTMLTablaDisenador(bloque) : crearHTMLTablaRellenable(bloque)}`;
   if (bloque.tipo === 'bloque-datos-paciente') return crearContenidoDatosPaciente(bloque, titulo, modoDisenador);
   if (bloque.tipo === 'bloque-imagenes-grid') return `<div class="template-image-grid-header">${titulo}<div class="template-image-grid-rule"></div></div><div class="designer-photo-grid" role="grid" aria-label="Cuadrícula de imágenes, dos columnas por tres filas">${Array.from({ length: IMAGENES_POR_PAGINA }, (_, indice) => `<span role="gridcell">Imagen ${indice + 1}</span>`).join('')}</div>`;
+  if (bloque.tipo === 'bloque-banner') return bloque.imagenSrc ? `<img class="template-banner-image" src="${escaparHTML(normalizarImagenBanner(bloque.imagenSrc))}" alt="${escaparHTML(bloque.titulo)}" draggable="false" />` : (modoDisenador ? '<div class="template-banner-placeholder">Selecciona el bloque y carga una imagen / banner</div>' : '');
   if (bloque.tipo === 'bloque-logo') return crearContenidoLogoClinica(modoDisenador);
   if (bloque.tipo === 'bloque-clinica') return crearContenidoInformacionClinica(titulo);
   if (bloque.tipo === 'bloque-diplomados') return crearContenidoDiplomadosBloque(bloque, titulo);
@@ -1911,12 +1919,12 @@ function seleccionarBloqueDisenador(idBloque, event = null) {
   });
   const catalogo = document.getElementById('designerCatalogPanel');
   const panel = document.getElementById('designerBlockPanel');
-  if (catalogo) catalogo.style.display = 'none';
+  if (catalogo) catalogo.style.display = 'grid';
   if (!panel) return;
   panel.style.display = 'grid';
   panel.innerHTML = crearOpcionesSidebarBloque(bloque);
   renderizarPaletasColoresRecientes(panel);
-  enfocarSeccionSidebarDisenador('bloques');
+  enfocarSeccionSidebarDisenador(document.querySelector('.designer-toolbox')?.dataset.activeSection || 'bloques');
   const perfil = perfilesInformes.find((item) => item.id === document.getElementById('designerBlocks')?.dataset.profileId);
   renderizarNavegadorDisenador(perfil);
 }
@@ -1938,10 +1946,10 @@ function seleccionarIdentificadorPlantilla() {
   const opcionesEtiquetas = etiquetasInformes.length
     ? `<option value="">Selecciona una etiqueta</option>${etiquetasInformes.map((etiqueta) => `<option value="${escaparHTML(etiqueta.id)}" ${etiqueta.id === identificador.etiquetaId ? 'selected' : ''}>${escaparHTML(etiqueta.nombre)}</option>`).join('')}`
     : '<option value="">Primero crea etiquetas en Configuración</option>';
-  if (catalogo) catalogo.style.display = 'none';
+  if (catalogo) catalogo.style.display = 'grid';
   panel.style.display = 'grid';
   panel.innerHTML = `<button class="designer-panel-back" type="button" onclick="cerrarOpcionesBloqueDisenador()">${iconoUI('arrow-left')} Volver a bloques</button><div class="designer-panel-heading"><span>Primera página</span><strong>Identificador de plantilla</strong></div><p class="designer-table-help">Selecciona una etiqueta para aplicar su color. El texto se puede personalizar solo para esta plantilla.</p><label class="designer-option-field"><span>Etiqueta y color</span><select id="designerIdentifierLabel" onchange="cambiarEtiquetaIdentificadorPlantilla(this.value)" ${etiquetasInformes.length ? '' : 'disabled'}>${opcionesEtiquetas}</select></label><label class="designer-option-field"><span>Texto del identificador</span><input id="designerIdentifierText" type="text" maxlength="80" value="${escaparHTML(textoVisible)}" placeholder="Puede quedar en blanco" oninput="cambiarTextoIdentificadorPlantilla(this.value)" /></label><div class="designer-identifier-text-actions"><button class="designer-use-auto-name" type="button" onclick="restablecerTextoIdentificadorPlantilla()">${etiquetaActiva ? 'Usar texto de la etiqueta' : 'Usar nombre automático'}</button><small id="designerIdentifierTextStatus">${modoTexto}</small></div>${etiquetaActiva ? `<div class="designer-label-selection-preview"><span style="--template-badge-bg:${etiquetaActiva.color};--template-badge-text:${etiquetaActiva.colorTexto}">${escaparHTML(etiquetaActiva.nombre)}</span><small>Color guardado en Configuración</small></div>` : '<p class="designer-table-help">Crea y administra las etiquetas en la sección Etiquetas de Configuración.</p>'}`;
-  enfocarSeccionSidebarDisenador('bloques');
+  enfocarSeccionSidebarDisenador(document.querySelector('.designer-toolbox')?.dataset.activeSection || 'bloques');
 }
 
 function cambiarEtiquetaIdentificadorPlantilla(etiquetaId) {
@@ -2017,6 +2025,7 @@ function cerrarOpcionesBloqueDisenador() {
     panel.style.display = 'none';
     panel.innerHTML = '';
   }
+  enfocarSeccionSidebarDisenador(document.querySelector('.designer-toolbox')?.dataset.activeSection || 'bloques');
 }
 
 function crearEditorCamposPaciente(bloque) {
@@ -2082,7 +2091,9 @@ function crearOpcionesSidebarBloque(bloque) {
   const indiceCapa = Math.max(0, bloquesPagina.findIndex((item) => item.id === bloque.id));
   const estaAlFondo = indiceCapa === 0;
   const estaAlFrente = indiceCapa === bloquesPagina.length - 1;
-  const opcionesEspecificas = bloque.tipo === 'bloque-datos-paciente'
+  const opcionesEspecificas = bloque.tipo === 'bloque-banner'
+    ? `<label class="designer-option-field"><span>${bloque.imagenSrc ? 'Reemplazar imagen' : 'Cargar imagen'}</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="cargarImagenBanner(this, '${bloque.id}')" /></label><button type="button" onclick="extenderBannerEnHoja('${bloque.id}')">Extender de borde a borde</button><p class="designer-table-help">La imagen se guarda en esta plantilla. El botón ajusta el ancho completo y conserva su proporción. Usa Alinear arriba o abajo para ubicarla.</p>`
+    : bloque.tipo === 'bloque-datos-paciente'
     ? crearEditorCamposPaciente(bloque)
     : bloque.tipo === 'bloque-identidad'
     ? `<label class="designer-option-field"><span>Dato que se mostrará</span><select onchange="actualizarOpcionBloqueDisenador('contenidoDefecto', this.value)">${crearOpcionesIdentidad(bloque.contenidoDefecto || 'firma-simple')}</select></label>`
@@ -2494,6 +2505,49 @@ function cambiarCapaBloqueDisenador(idBloque, accion) {
   seleccionarBloqueDisenador(idBloque);
 }
 
+function normalizarImagenBanner(src) {
+  return /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(String(src || '')) ? String(src) : '';
+}
+
+function ajustarBannerAnchoHoja(bloque, pagina) {
+  bloque.x = 0;
+  bloque.width = pagina?.clientWidth || 794;
+  bloque.height = bloque.width / (bloque.imagenProporcion || 5);
+  bloque.y = Math.max(0, Math.min(bloque.y, (pagina?.clientHeight || 1123) - bloque.height));
+}
+
+function extenderBannerEnHoja(id) {
+  guardarEstructuraPlantilla(false);
+  const { perfil, bloque } = obtenerBloqueDisenador(id);
+  if (!perfil || bloque?.tipo !== 'bloque-banner') return;
+  const pagina = document.querySelector(`#designerBlocks [data-designer-page-id="${bloque.paginaId}"]`);
+  ajustarBannerAnchoHoja(bloque, pagina);
+  guardarPerfiles();
+  diseñarEstructuraPlantilla(perfil.id);
+  seleccionarBloqueDisenador(id);
+}
+
+async function cargarImagenBanner(input, id) {
+  const archivo = input.files?.[0];
+  if (!archivo) return;
+  const { perfil, bloque } = obtenerBloqueDisenador(id);
+  if (!perfil || bloque?.tipo !== 'bloque-banner') return;
+  try {
+    const src = normalizarImagenBanner(await leerImagenComoDataURL(archivo));
+    if (!src) throw new Error('Selecciona una imagen PNG, JPG, WebP o GIF.');
+    const dimensiones = await analizarImagenDataURL(src);
+    if (!dimensiones.width || !dimensiones.height) throw new Error('No se pudo leer la imagen.');
+    guardarEstructuraPlantilla(false);
+    bloque.imagenSrc = src;
+    bloque.imagenProporcion = dimensiones.width / dimensiones.height;
+    extenderBannerEnHoja(id);
+  } catch (error) {
+    mostrarMensajeApp('No se pudo cargar el banner', error.message, 'error');
+  } finally {
+    input.value = '';
+  }
+}
+
 function agregarBloquePlantilla(tipo) {
   const lienzo = document.getElementById('designerBlocks');
   const perfil = lienzo && perfilesInformes.find((item) => item.id === lienzo.dataset.profileId);
@@ -2505,6 +2559,13 @@ function agregarBloquePlantilla(tipo) {
   if (tipo === 'bloque-titulo-principal' && indicePagina !== 0) return;
   perfil.paginasEliminadas = (perfil.paginasEliminadas || []).filter((id) => id !== paginaId);
   const nuevoBloque = normalizarBloquePerfil({ tipo, paginaId, x: 40, y: 60, width: tipo === 'bloque-logo' ? 180 : tipo === 'bloque-figura' ? 240 : tipo === 'bloque-titulo-principal' ? 520 : 620, height: tipo === 'bloque-imagenes-grid' ? 600 : tipo === 'bloque-datos-paciente' ? 280 : tipo === 'bloque-diplomados' ? 320 : tipo === 'bloque-logo' ? 180 : tipo === 'bloque-figura' ? 160 : tipo === 'bloque-identidad' || tipo === 'bloque-clinica' ? 150 : 140 }, perfil.bloques.length, paginaId);
+  if (tipo === 'bloque-banner') {
+    const hoja = lienzo.querySelector('.designer-page-canvas.is-active-page') || lienzo.querySelector('.designer-page-canvas');
+    nuevoBloque.x = 0;
+    nuevoBloque.y = 0;
+    nuevoBloque.width = hoja?.clientWidth || 794;
+    nuevoBloque.height = nuevoBloque.width / 5;
+  }
   nuevoBloque.capa = perfil.bloques.filter((bloque) => bloque.paginaId === paginaId).reduce((maximo, bloque) => Math.max(maximo, Number(bloque.capa) || 0), 0) + 1;
   perfil.bloques.push(nuevoBloque);
   bloqueDisenadorSeleccionadoId = nuevoBloque.id;
@@ -3388,6 +3449,7 @@ function cambiarVista(vistaActiva) {
   const configuracionView = document.getElementById('configuracion-view');
   const perfilesView = document.getElementById('perfiles-view');
   const designerView = document.getElementById('designer-view');
+  const pacientesView = document.getElementById('pacientes-view');
 
   if (dashboardView) dashboardView.style.display = vistaActiva === 'dashboard' ? 'block' : 'none';
   if (editorView) editorView.style.display = vistaActiva === 'editor' ? 'block' : 'none';
@@ -3396,6 +3458,7 @@ function cambiarVista(vistaActiva) {
   if (configuracionView) configuracionView.style.display = vistaActiva === 'configuracion' ? 'block' : 'none';
   if (perfilesView) perfilesView.style.display = vistaActiva === 'perfiles' ? 'block' : 'none';
   if (designerView) designerView.style.display = vistaActiva === 'designer' ? 'block' : 'none';
+  if (pacientesView) pacientesView.style.display = vistaActiva === 'pacientes' ? 'block' : 'none';
   if (vistaActiva !== 'editor') {
     const cinta = document.getElementById('wordRibbon');
     if (cinta) cinta.style.display = 'none';
@@ -3547,29 +3610,31 @@ function enfocarSeccionSidebarDisenador(seccion, boton = null) {
   if (!toolbox) return;
   const catalogo = document.getElementById('designerCatalogPanel');
   const panelBloque = document.getElementById('designerBlockPanel');
-  const mostrandoPropiedades = panelBloque?.style.display !== 'none';
+  const mostrandoPropiedades = Boolean(panelBloque && panelBloque.style.display !== 'none');
   const paneles = {
     paginas: [toolbox.querySelector('.designer-navigator')],
-    bloques: [mostrandoPropiedades ? panelBloque : catalogo],
+    bloques: [catalogo],
     apariencia: [toolbox.querySelector('.designer-controls-section')],
     avanzado: [toolbox.querySelector('.designer-assistant')]
   };
   const seccionActiva = Object.prototype.hasOwnProperty.call(paneles, seccion) ? seccion : 'paginas';
+  toolbox.dataset.activeSection = seccionActiva;
   const visibles = new Set((paneles[seccionActiva] || []).filter(Boolean));
+  if (mostrandoPropiedades) visibles.add(panelBloque);
   [toolbox.querySelector('.designer-navigator'), catalogo, panelBloque, toolbox.querySelector('.designer-controls-section'), toolbox.querySelector('.designer-assistant')]
     .filter(Boolean)
     .forEach((panel) => panel.classList.toggle('is-sidebar-section-hidden', !visibles.has(panel)));
   const destino = Array.from(visibles)[0];
   if (!destino) return;
-  if (destino instanceof HTMLDetailsElement) destino.open = true;
+  if (boton && destino instanceof HTMLDetailsElement) destino.open = true;
   const botonActivo = boton || toolbox.querySelector(`.designer-sidebar-nav button[data-designer-section="${seccionActiva}"]`);
   toolbox.querySelectorAll('.designer-sidebar-nav button').forEach((item) => {
     const activo = item === botonActivo;
     item.classList.toggle('is-active', activo);
     item.setAttribute('aria-pressed', String(activo));
   });
-  window.requestAnimationFrame(() => {
-    toolbox.scrollTo({ top: 0, behavior: boton ? 'smooth' : 'auto' });
+  if (boton) window.requestAnimationFrame(() => {
+    toolbox.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
 
@@ -4057,18 +4122,21 @@ function obtenerPasosTutorialInteractivo() {
   const hayPlantillas = perfilesInformes.length > 0;
   return [
     { esencial: true, grupo: 'Preparación', icono: 'book', vista: 'configuracion', configSeccion: 'ayuda', selector: '#configHelpSection', ceja: 'Bienvenida', titulo: 'Tu centro de aprendizaje', texto: 'Desde aquí puedes repetir este recorrido y abrir el manual completo cuando necesites una explicación detallada.', pista: 'Busca esta sección al final de cualquier sesión de aprendizaje.' },
-    { esencial: true, grupo: 'Preparación', icono: 'settings', vista: 'configuracion', configSeccion: 'apariencia', selector: '#configThemeSection', ceja: 'Apariencia', titulo: 'Haz tuyo el espacio de trabajo', texto: 'Elige una de seis paletas diferenciadas y alterna su versión clara u oscura. El documento impreso no cambia.', pista: 'La paleta y el modo se aplican al instante y se guardan automáticamente.' },
+    { grupo: 'Preparación', icono: 'settings', vista: 'configuracion', configSeccion: 'apariencia', selector: '#configThemeSection', ceja: 'Apariencia', titulo: 'Haz tuyo el espacio de trabajo', texto: 'Elige una de seis paletas diferenciadas y alterna su versión clara u oscura. El documento impreso no cambia.', pista: 'La paleta y el modo se aplican al instante y se guardan automáticamente.' },
+    { esencial: true, grupo: 'Preparación', icono: 'settings', vista: 'configuracion', configSeccion: 'identidad', selector: '#configCredentialsSection', ceja: 'Datos profesionales', titulo: 'Configura una vez, reutiliza siempre', texto: 'Firma, RUT, registro, diplomados, logo y contacto alimentan automáticamente los bloques de tus informes.', pista: 'Guarda los cambios antes de volver al inicio.' },
     { grupo: 'Inicio', icono: 'grid', vista: 'dashboard', selector: '.summary-row', ceja: 'Panel principal', titulo: 'Tu actividad de un vistazo', texto: 'Estas tarjetas muestran cuántos informes y plantillas tienes. La actividad reciente aparece justo debajo.', pista: 'Usa el buscador superior para encontrar informes rápidamente.' },
     { esencial: true, grupo: 'Inicio', icono: 'file-plus', vista: 'dashboard', selector: '.quick-actions', ceja: 'Acciones rápidas', titulo: 'Todo comienza aquí', texto: 'Crea un informe, administra plantillas, consulta el historial o recupera documentos desde la papelera.', pista: 'Crear informe te pedirá primero elegir una plantilla.' },
-    { esencial: true, grupo: 'Plantillas', icono: 'folder', vista: 'perfiles', selector: '.collections-sidebar', ceja: 'Organización', titulo: 'Colecciones como carpetas', texto: 'Agrupa plantillas por especialidad o tipo de examen. Puedes crear colecciones, cambiar su nombre y asignarles un color.', pista: 'Arrastra una tarjeta sobre una colección para moverla.' },
+    { esencial: true, grupo: 'Pacientes', icono: 'user', vista: 'dashboard', selector: '#patientsQuickAction', ceja: 'Fichas reutilizables', titulo: 'Evita escribir los mismos datos', texto: 'Guarda pacientes y tutores una sola vez. Desde su ficha puedes iniciar un informe o duplicar el último como punto de partida.', pista: 'Al guardar un informe, su paciente se registra o actualiza automáticamente.' },
+    { esencial: true, grupo: 'Informes', icono: 'check', vista: 'dashboard', selector: '.action-card:first-child', ceja: 'Del molde al PDF', titulo: 'Guarda, finaliza y exporta con claridad', texto: 'Guardar borrador conserva el trabajo pendiente; Finalizar cambia su estado a Completado; Exportar PDF crea el archivo sin alterar por sí solo el estado clínico.', pista: 'Revisar abre un checklist y el autoguardado mantiene una copia recuperable mientras editas.' },
+    { grupo: 'Plantillas', icono: 'folder', vista: 'perfiles', selector: '.collections-sidebar', ceja: 'Organización', titulo: 'Colecciones como carpetas', texto: 'Agrupa plantillas por especialidad o tipo de examen. Puedes crear colecciones, cambiar su nombre y asignarles un color.', pista: 'Arrastra una tarjeta sobre una colección para moverla.' },
     { grupo: 'Plantillas', icono: 'search', vista: 'perfiles', selector: '.profiles-workspace', ceja: 'Biblioteca', titulo: 'Selecciona y organiza en grupo', texto: 'Usa las casillas o “Seleccionar esta página” para reunir varias plantillas. Después arrastra cualquiera de las seleccionadas a una colección o a Favoritas.', pista: 'Favoritas funciona como etiqueta: la plantilla conserva su colección original.' },
     { esencial: true, grupo: 'Diseñador', icono: 'layout', vista: hayPlantillas ? 'designer' : 'perfiles', selector: hayPlantillas ? '.designer-navigator' : '.profiles-header-actions', ceja: 'Páginas y capas', titulo: hayPlantillas ? 'Controla la estructura del documento' : 'Crea tu primera plantilla', texto: hayPlantillas ? 'Navega entre hojas y selecciona capas. El orden determina qué bloque aparece delante de otro.' : 'Crea una plantilla para acceder al diseñador de páginas, capas y bloques.', pista: hayPlantillas ? 'Selecciona una capa para editarla sin buscarla sobre la hoja.' : 'Después de crearla, se abrirá directamente su diseñador.' },
     { grupo: 'Diseñador', icono: 'grid', vista: hayPlantillas ? 'designer' : 'perfiles', selector: hayPlantillas ? '#designerCatalogPanel' : '#perfiles-card-container', ceja: 'Catálogo de bloques', titulo: 'Construye la plantilla por categorías', texto: 'Agrega texto, tablas, imágenes, identidad profesional y figuras desde un catálogo ordenado y con búsqueda.', pista: 'Selecciona un bloque para editar posición, tamaño, color y capa.' },
     { grupo: 'Diseñador', icono: 'check', vista: hayPlantillas ? 'designer' : 'perfiles', selector: hayPlantillas ? '.designer-assistant' : '.profiles-header-actions', ceja: 'Asistente de diseño', titulo: 'Detecta problemas antes de guardar', texto: hayPlantillas ? 'Valida recortes, solapamientos, contraste, tamaños y páginas poco aprovechadas. También puedes anticipar desbordamientos, copiar bloques entre plantillas, crear componentes y recuperar versiones.' : 'Crea una plantilla para acceder a validación, componentes, versiones y recuperación automática.', pista: 'Usa Ctrl o Cmd + clic para seleccionar varios bloques, alinearlos o bloquearlos juntos.' },
     { grupo: 'Diseñador', icono: 'file-plus', vista: hayPlantillas ? 'designer' : 'perfiles', selector: hayPlantillas ? '[data-block-label="Datos paciente ficha campos rellenables"]' : '.profiles-header-actions', ceja: 'Datos del paciente', titulo: 'Crea fichas a tu medida', texto: hayPlantillas ? 'Agrega el bloque y define manualmente sus campos. Puedes renombrarlos, ordenarlos, eliminarlos o añadir nuevos; la ficha organiza filas y columnas automáticamente.' : 'Crea una plantilla para añadir una ficha de datos del paciente con campos personalizados.', pista: 'Los valores que completes después se guardan con cada informe y se trasladan al PDF.' },
     { grupo: 'Informes', icono: 'camera', vista: hayPlantillas ? 'designer' : 'perfiles', selector: hayPlantillas ? '[data-block-label="Cuadrícula imágenes fotografías"]' : '.profiles-header-actions', ceja: 'Imágenes automáticas', titulo: 'Seis imágenes por cuadrícula', texto: hayPlantillas ? 'Agrega este bloque a la plantilla. Las imágenes se distribuyen en cuadros 2 × 3; el sistema avisa sobre duplicados reales, baja resolución y formatos extremos. El excedente replica exactamente la estética del bloque.' : 'Crea una plantilla y agrega una cuadrícula de imágenes. Cada hoja admite seis fotografías y el excedente genera nuevas páginas.', pista: 'En el informe puedes rotar cada imagen o alternar entre recorte cuadrado y ajuste completo.' },
-    { grupo: 'Respaldo', icono: 'file', vista: 'configuracion', configSeccion: 'sistema', selector: '#configSystemSection', ceja: 'Importar y exportar', titulo: 'Mantén tus plantillas respaldadas', texto: 'Selecciona plantillas individuales o todas. Al importar, la biblioteca actual se conserva y los duplicados se renombran.', pista: 'Exporta periódicamente las plantillas importantes.' },
-    { grupo: 'Identidad', icono: 'settings', vista: 'configuracion', configSeccion: 'identidad', selector: '#configCredentialsSection', ceja: 'Datos profesionales', titulo: 'Configura una vez, reutiliza siempre', texto: 'Firma, RUT, registro, diplomados, logo y contacto alimentan automáticamente los bloques de tus informes.', pista: 'Guarda los cambios antes de volver al inicio.' },
+    { grupo: 'Informes', icono: 'text', vista: 'configuracion', configSeccion: 'textos', selector: '#configSnippetsSection', ceja: 'Biblioteca clínica', titulo: 'Reutiliza frases y hallazgos', texto: 'Guarda textos frecuentes con atajos y variables como paciente, fecha, especie o médico. Después insértalos en el campo clínico activo.', pista: 'Usa nombres breves y reconocibles para encontrarlos rápidamente.' },
+    { esencial: true, grupo: 'Respaldo', icono: 'file', vista: 'configuracion', configSeccion: 'sistema', selector: '#configSystemSection', ceja: 'Protección de datos', titulo: 'Respalda todo el sistema', texto: 'El respaldo integral incluye informes, pacientes, textos, plantillas, identidad y preferencias. Además se mantiene una copia automática local recuperable.', pista: 'Conserva también una copia exportada fuera del equipo.' },
     { esencial: true, grupo: 'Final', icono: 'check', vista: 'configuracion', configSeccion: 'ayuda', selector: '#configHelpSection', ceja: 'Recorrido completado', titulo: 'Ya estás listo para comenzar', texto: 'Conoces el flujo principal. Puedes repetir el recorrido, elegir la versión completa o consultar el manual cuando quieras.', pista: 'Pulsa Finalizar para registrar el recorrido como completado.' }
   ];
 }
@@ -6552,6 +6620,7 @@ function cargarInformeEnEditor(informe) {
     repaginarCampoInforme('resultados');
     ajustarPaginaConclusion();
     ajustarCamposPortada();
+    window.refrescarMejorasProducto?.();
   });
 }
 
@@ -6611,6 +6680,10 @@ function guardarBorradorInforme(mostrarConfirmacion = true) {
     datos: datosPersistentes
   };
 
+  if (informeExistente && window.registrarRevisionInforme && !(window.AppCore?.reportsEqual(informeExistente, informe))) {
+    window.registrarRevisionInforme(informeExistente, 'Antes de guardar cambios');
+  }
+
   const indice = estadoDashboard.informes.findIndex((item) => item.id === identificador.idAnterior || item.id === identificador.idNuevo);
   if (indice === -1) {
     estadoDashboard.informes.push(informe);
@@ -6619,6 +6692,7 @@ function guardarBorradorInforme(mostrarConfirmacion = true) {
   }
 
   persistirInformes();
+  window.registrarPacienteDesdeDatos?.(datos);
   window.clearTimeout(timerAutoguardadoInforme);
   localStorage.removeItem('borradorInformeAutomatico');
   renderEditor();
@@ -6652,6 +6726,10 @@ function guardarInformeCompletado(datos, nombrePaciente, horaCreacion = null) {
     datos: datosPersistentes
   };
 
+  if (informeExistente && window.registrarRevisionInforme && !(window.AppCore?.reportsEqual(informeExistente, informe))) {
+    window.registrarRevisionInforme(informeExistente, 'Antes de finalizar');
+  }
+
   const indice = estadoDashboard.informes.findIndex((item) => item.id === identificador.idAnterior || item.id === identificador.idNuevo);
   if (indice === -1) {
     estadoDashboard.informes.push(informe);
@@ -6660,6 +6738,7 @@ function guardarInformeCompletado(datos, nombrePaciente, horaCreacion = null) {
   }
 
   persistirInformes();
+  window.registrarPacienteDesdeDatos?.(datos);
   window.clearTimeout(timerAutoguardadoInforme);
   localStorage.removeItem('borradorInformeAutomatico');
   renderEditor();
@@ -6879,7 +6958,6 @@ async function guardarInformePDF() {
     if (!continuar) return;
   }
 
-  const nombrePaciente = datos.paciente || 'informe';
   const horaCreacionInforme = obtenerHoraCreacionInformeActivo();
   const nombreSugerido = crearNombreSugeridoInforme(datos, horaCreacionInforme);
 
@@ -6889,9 +6967,25 @@ async function guardarInformePDF() {
       await esperarPintadoPDF();
       repaginarInforme();
       await esperarPintadoPDF();
-      const resultado = await window.electronAPI.guardarPDF(nombreSugerido);
+      const resultado = await window.electronAPI.guardarPDF({
+        nombreSugerido,
+        directorioInicial: localStorage.getItem('ultimaCarpetaPDF') || ''
+      });
       if (resultado && resultado.ok) {
-        guardarInformeCompletado(datos, nombrePaciente, horaCreacionInforme);
+        const estadoAntesDeExportar = obtenerInformePorId(informeActivoId);
+        const conservarCompletado = estadoAntesDeExportar?.estado === 'Completado';
+        const completadoEnAnterior = estadoAntesDeExportar?.completadoEn || '';
+        guardarBorradorInforme(false);
+        const informeGuardado = obtenerInformePorId(informeActivoId);
+        if (conservarCompletado && informeGuardado) {
+          informeGuardado.estado = 'Completado';
+          informeGuardado.completadoEn = completadoEnAnterior || new Date().toISOString();
+        }
+        window.__appBridge?.markCurrentReportExported(resultado.filePath);
+        const separador = Math.max(resultado.filePath.lastIndexOf('/'), resultado.filePath.lastIndexOf('\\'));
+        if (separador > 0) localStorage.setItem('ultimaCarpetaPDF', resultado.filePath.slice(0, separador));
+        if (window.showPdfSuccess) window.showPdfSuccess(resultado.filePath);
+        else mostrarMensajeApp('PDF exportado', resultado.filePath, 'success');
       }
     } finally {
       document.body.classList.remove('pdf-export-mode');
@@ -7939,17 +8033,89 @@ window.deshacerCambioEditor = deshacerCambioEditor;
 window.rehacerCambioEditor = rehacerCambioEditor;
 window.responderConfirmacionBorrador = responderConfirmacionBorrador;
 
+function duplicarInformeParaPaciente(informeId) {
+  const origen = obtenerInformePorId(informeId);
+  if (!origen) return;
+  const datos = clonarDatosEditor(origen.datos || {});
+  datos.fecha = formatearFechaISO(new Date());
+  datos.imagenes = [];
+  const copia = {
+    id: `INF-${Date.now()}`,
+    creadoEn: new Date().toISOString(),
+    actualizado: new Date().toISOString(),
+    estado: 'Borrador',
+    datos
+  };
+  showEditor();
+  cargarInformeEnEditor(copia);
+  mostrarAvisoBreve('Se creó un borrador desde el informe anterior. Revisa fecha, hallazgos y conclusión.');
+}
+
+function restaurarRevisionInforme(snapshot) {
+  if (!snapshot?.id) return;
+  const actual = obtenerInformePorId(snapshot.id);
+  if (actual) window.registrarRevisionInforme?.(actual, 'Antes de restaurar una versión');
+  const restaurado = {
+    ...clonarProfundo(snapshot),
+    estado: 'Borrador',
+    completadoEn: '',
+    actualizado: new Date().toISOString()
+  };
+  const indice = estadoDashboard.informes.findIndex((item) => item.id === restaurado.id);
+  if (indice < 0) estadoDashboard.informes.push(restaurado);
+  else estadoDashboard.informes[indice] = restaurado;
+  persistirInformes();
+  showEditor();
+  cargarInformeEnEditor(restaurado);
+}
+
+window.__appBridge = {
+  getCurrentReportData: () => leerInformeDesdeEditor(),
+  getCurrentReportId: () => informeActivoId,
+  getSettings: () => ({ ...ajustesApp }),
+  hasVisibleReportBlocks: () => !informeLayoutActivo.perfilId || informeLayoutActivo.bloques.some((bloque) => bloque.visible !== false),
+  finalizeCurrentReport: () => {
+    const datos = leerInformeDesdeEditor();
+    guardarInformeCompletado(datos, datos.paciente || 'informe', obtenerHoraCreacionInformeActivo());
+  },
+  duplicateReport: duplicarInformeParaPaciente,
+  restoreReportRevision: restaurarRevisionInforme,
+  markCurrentReportExported: (filePath) => {
+    const informe = obtenerInformePorId(informeActivoId);
+    if (!informe) return;
+    informe.exportadoEn = new Date().toISOString();
+    informe.ultimoPDF = String(filePath || '');
+    persistirInformes();
+    renderDashboard();
+  },
+  refreshDashboard: () => renderDashboard()
+};
+
 function renderDashboard() {
   const informesCount = document.getElementById('informesCount');
   const informesCaption = document.getElementById('informesCaption');
   const plantillasCount = document.getElementById('plantillasCount');
   const plantillasCaption = document.getElementById('plantillasCaption');
+  const draftsCount = document.getElementById('draftsCount');
+  const draftsCaption = document.getElementById('draftsCaption');
+  const completedWeekCount = document.getElementById('completedWeekCount');
+  const pendingExportCount = document.getElementById('pendingExportCount');
+  const pendingExportCaption = document.getElementById('pendingExportCaption');
   const activityBody = document.getElementById('activityBody');
   const activityBadge = document.querySelector('.activity-badge');
   const terminoBusqueda = obtenerBusquedaDashboard();
   const hayBusqueda = Boolean(normalizarTextoBusqueda(terminoBusqueda));
 
   const totalInformes = estadoDashboard.informes.length;
+  const totalBorradores = estadoDashboard.informes.filter((informe) => informe.estado === 'Borrador').length;
+  const limiteSemana = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const totalCompletadosSemana = estadoDashboard.informes.filter((informe) => informe.estado === 'Completado' && new Date(informe.completadoEn || informe.actualizado || 0).getTime() >= limiteSemana).length;
+  const totalPendientesExportar = estadoDashboard.informes.filter((informe) => informe.estado === 'Completado' && !informe.exportadoEn).length;
+  if (draftsCount) draftsCount.textContent = String(totalBorradores);
+  if (draftsCaption) draftsCaption.textContent = totalBorradores ? `${totalBorradores} informe${totalBorradores === 1 ? '' : 's'} por continuar.` : 'Sin trabajo pendiente.';
+  if (completedWeekCount) completedWeekCount.textContent = String(totalCompletadosSemana);
+  if (pendingExportCount) pendingExportCount.textContent = String(totalPendientesExportar);
+  if (pendingExportCaption) pendingExportCaption.textContent = totalPendientesExportar ? `${totalPendientesExportar} informe${totalPendientesExportar === 1 ? '' : 's'} completado${totalPendientesExportar === 1 ? '' : 's'} sin exportar.` : 'Todo lo completado está exportado.';
   if (informesCount) informesCount.textContent = String(totalInformes);
   if (informesCaption) {
     const totalCoincidencias = hayBusqueda
@@ -7978,12 +8144,10 @@ function renderDashboard() {
 
   if (!activityBody) return;
 
-  const hoy = new Date();
   const informesMostrados = estadoDashboard.informes
     .filter((informe) => {
       if (hayBusqueda) return informeCoincideBusqueda(informe, terminoBusqueda);
-      const fechaActividad = obtenerFechaActividad(informe);
-      return fechaActividad && esMismoDia(fechaActividad, hoy);
+      return true;
     })
     .sort((a, b) => {
       const fechaA = obtenerFechaActividad(a);
@@ -7993,12 +8157,12 @@ function renderDashboard() {
       return tiempoB - tiempoA;
     });
 
-  if (activityBadge) activityBadge.textContent = hayBusqueda ? 'Busqueda' : 'Hoy';
+  if (activityBadge) activityBadge.textContent = hayBusqueda ? 'Búsqueda' : 'Todos';
 
   if (informesMostrados.length === 0) {
     activityBody.innerHTML = [
       '<div class="activity-empty">',
-      hayBusqueda ? '  No hay informes que coincidan con la busqueda.' : '  No hay actividad registrada hoy.',
+      hayBusqueda ? '  No hay informes que coincidan con la búsqueda.' : '  Aún no hay informes guardados.',
       '</div>'
     ].join('');
     renderizarPaginacion('dashboardPagination', 'dashboard', 0, TAMANOS_PAGINA.dashboard);
@@ -8024,6 +8188,7 @@ function renderDashboard() {
     })
     .join('');
   renderizarPaginacion('dashboardPagination', 'dashboard', informesMostrados.length, TAMANOS_PAGINA.dashboard);
+  window.refrescarMejorasProducto?.();
 }
 
 (function inicializarDashboard() {
