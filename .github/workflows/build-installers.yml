@@ -12,11 +12,15 @@ permissions:
 jobs:
   macos:
     name: macOS ${{ matrix.arch }}
-    runs-on: macos-14
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, arm64]
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
 
     steps:
       - name: Descargar codigo
@@ -60,13 +64,15 @@ jobs:
           iconutil -c icns build/icon.iconset -o build/icon.icns
 
       - name: Generar DMG
-        run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish=never
+        run: npm run dist:mac:${{ matrix.arch }} -- --config.directories.output=dist/installers
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
       - name: Subir instalador macOS
         uses: actions/upload-artifact@v4
         with:
           name: Generador-Informes-macOS-${{ matrix.arch }}
-          path: dist/*.dmg
+          path: dist/installers/*-${{ matrix.arch }}.dmg
           if-no-files-found: error
 
   windows:
@@ -86,11 +92,11 @@ jobs:
         run: npm install
 
       - name: Generar instalador NSIS
-        run: npx electron-builder --win nsis --x64 --publish=never
+        run: npm run dist:win:x64 -- --config.directories.output=dist/installers
 
       - name: Subir instalador Windows
         uses: actions/upload-artifact@v4
         with:
           name: Generador-Informes-Windows-x64
-          path: dist/*.exe
+          path: dist/installers/*-x64.exe
           if-no-files-found: error
