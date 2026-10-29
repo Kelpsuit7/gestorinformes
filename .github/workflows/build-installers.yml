@@ -34,21 +34,11 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      - name: Crear icono macOS desde logo.ico
+      - name: Crear icono macOS desde logo.png
         shell: bash
         run: |
           mkdir -p build/icon.iconset
-          python3 - <<'PY'
-          from pathlib import Path
-          data = Path("logo.ico").read_bytes()
-          if data[:4] != b"\x00\x00\x01\x00":
-              raise SystemExit("logo.ico no es un archivo ICO valido")
-          offset = int.from_bytes(data[18:22], "little")
-          image = data[offset:]
-          if not image.startswith(b"\x89PNG\r\n\x1a\n"):
-              raise SystemExit("logo.ico no contiene una imagen PNG compatible")
-          Path("build/logo-source.png").write_bytes(image)
-          PY
+          cp logo.png build/logo-source.png
           sips -z 900 900 build/logo-source.png --out build/logo-scaled.png
           sips --padToHeightWidth 1024 1024 --padColor FFFFFF build/logo-scaled.png --out build/icon-square.png
           sips -z 16 16 build/icon-square.png --out build/icon.iconset/icon_16x16.png
