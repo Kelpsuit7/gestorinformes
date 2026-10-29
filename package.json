@@ -1,0 +1,60 @@
+{
+  "name": "reporthub-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dashboard profesional para informes tecnicos en Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue; & '.\\.electron-run\\node_modules\\electron\\dist\\electron.exe' .\"",
+    "test": "node --test tests/*.test.js",
+    "dist:mac:x64": "electron-builder --mac dmg --x64 --publish=never",
+    "dist:mac:arm64": "electron-builder --mac dmg --arm64 --publish=never",
+    "dist:win:x64": "electron-builder --win nsis --x64 --publish=never"
+  },
+  "build": {
+    "appId": "com.huellitas.generadorinformes",
+    "productName": "Generador Informes",
+    "asar": true,
+    "files": [
+      "index.html",
+      "manual-usuario.html",
+      "main.js",
+      "preload.js",
+      "app-core.js",
+      "renderer.js",
+      "productivity.js",
+      "styles.css",
+      "*.png",
+      "*.ico",
+      "!node_modules",
+      "!.electron-run"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg"
+      ]
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "win": {
+      "icon": "logo.ico",
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "30.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

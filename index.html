@@ -1,0 +1,933 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#314b46" />
+  <title>Generador de Informes</title>
+  <script>
+    try {
+      const preferencias = JSON.parse(localStorage.getItem('ajustesApp') || '{}');
+      const temaAnterior = preferencias.tema || 'huellitas';
+      const migracionesTema = { noche: 'huellitas', cielo: 'oceano', bosque: 'huellitas', grafito: 'huellitas' };
+      document.documentElement.dataset.theme = migracionesTema[temaAnterior] || temaAnterior;
+      document.documentElement.dataset.mode = preferencias.modoTema || (temaAnterior === 'noche' || temaAnterior === 'grafito' ? 'oscuro' : 'claro');
+    } catch (_) {
+      document.documentElement.dataset.theme = 'huellitas';
+      document.documentElement.dataset.mode = 'claro';
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <svg class="ui-icon-sprite" aria-hidden="true">
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.3V9.6h.1A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1v-.1h4.04v.1A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.5c.16.4.37.74.6 1 .3.3.7.4 1.1.4h.1v4.04h-.1A1.7 1.7 0 0 0 19.4 15Z"></path></symbol>
+    <symbol id="icon-file-plus" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6M12 12v6M9 15h6"></path></symbol>
+    <symbol id="icon-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"></path></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m10 8 6 4-6 4Z"></path></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22Z"></path><path d="M4 5.5v13A3.5 3.5 0 0 1 7.5 15H20"></path></symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6M9 12h11"></path></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></symbol>
+    <symbol id="icon-select-page" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect><path d="m8 12 2.7 2.7L16.5 9"></path></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path><circle cx="12" cy="13" r="4"></circle></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6M8 13h8M8 17h6"></path></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"></path></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></symbol>
+    <symbol id="icon-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.5a1.8 1.8 0 0 0 0-3.6h-1a1.6 1.6 0 0 1 0-3.2H15A6 6 0 0 0 21 8.4C19.6 5.2 16.2 3 12 3Z"></path><circle cx="7.5" cy="10" r=".8"></circle><circle cx="10" cy="6.8" r=".8"></circle><circle cx="14.2" cy="6.6" r=".8"></circle><circle cx="17.2" cy="9.4" r=".8"></circle></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+    <symbol id="icon-undo" viewBox="0 0 24 24"><path d="M9 7 4 12l5 5"></path><path d="M20 17a8 8 0 0 0-12-5"></path></symbol>
+    <symbol id="icon-redo" viewBox="0 0 24 24"><path d="m15 7 5 5-5 5"></path><path d="M4 17a8 8 0 0 1 12-5"></path></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></symbol>
+    <symbol id="icon-save" viewBox="0 0 24 24"><path d="M5 3h12l3 3v15H4V4a1 1 0 0 1 1-1Z"></path><path d="M8 3v6h8V3M8 21v-7h8v7"></path></symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="9" r="1.5"></circle><path d="m4 17 5-5 4 4 2-2 5 4"></path></symbol>
+    <symbol id="icon-pages" viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></symbol>
+    <symbol id="icon-flow" viewBox="0 0 24 24"><path d="M6 4h8a3 3 0 0 1 3 3v10"></path><path d="m13 14 4 4 4-4M6 8V4l4 4"></path></symbol>
+    <symbol id="icon-align-left" viewBox="0 0 24 24"><path d="M4 5h16M4 10h11M4 15h16M4 20h9"></path></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5Z"></path><path d="m3 12 9 5 9-5M3 16l9 5 9-5"></path></symbol>
+    <symbol id="icon-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18M9 9v11M15 9v11"></path></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></symbol>
+    <symbol id="icon-building" viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M9 21v-4h6v4"></path><path d="M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"></path></symbol>
+    <symbol id="icon-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"></circle><path d="m8 14-2 8 6-3 6 3-2-8"></path></symbol>
+    <symbol id="icon-shapes" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"></circle><rect x="12" y="12" width="8" height="8" rx="1"></rect></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></symbol>
+    <symbol id="icon-rotate" viewBox="0 0 24 24"><path d="M20 7v5h-5"></path><path d="M19 12a7 7 0 1 1-2-5l3 3"></path></symbol>
+    <symbol id="icon-type" viewBox="0 0 24 24"><path d="M5 5h14M12 5v14M8 19h8"></path></symbol>
+    <symbol id="icon-text" viewBox="0 0 24 24"><path d="M5 6h14M5 10h14M5 14h10M5 18h7"></path></symbol>
+    <symbol id="icon-heading" viewBox="0 0 24 24"><path d="M5 5v14M19 5v14M5 12h14"></path></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.2A10.3 10.3 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.2 2.8M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9 9 0 0 0 3.2-.6M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></symbol>
+  </svg>
+  <div id="dashboard-view">
+    <div class="dashboard-shell">
+      <header class="top-bar dashboard-topbar">
+        <div class="brand-block">
+          <img class="brand-logo" src="logo.png" alt="Huellitas Hospital Clinico Veterinario" />
+          <label class="search-wrap search-wrap-inline" for="searchInput">
+            <span class="search-icon"><svg class="ui-icon"><use href="#icon-search"></use></svg></span>
+            <input id="searchInput" type="search" placeholder="Buscar por paciente, tutor, fecha o informe…" />
+          </label>
+        </div>
+        <button class="settings-corner-btn" type="button" onclick="showConfiguracion()" title="Configuración" aria-label="Configuración"><svg class="ui-icon"><use href="#icon-settings"></use></svg></button>
+      </header>
+
+      <main class="main-panel">
+        <section class="summary-row" aria-label="Resumen">
+          <article class="summary-card">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-file"></use></svg></span>
+            <p class="summary-title">Informes creados</p>
+            <p id="informesCount" class="summary-value">0</p>
+            <p id="informesCaption" class="summary-caption"></p>
+          </article>
+          <article class="summary-card summary-card-drafts">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
+            <p class="summary-title">Borradores pendientes</p>
+            <p id="draftsCount" class="summary-value">0</p>
+            <p id="draftsCaption" class="summary-caption">Sin trabajo pendiente.</p>
+          </article>
+          <article class="summary-card summary-card-week">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"></use></svg></span>
+            <p class="summary-title">Completados esta semana</p>
+            <p id="completedWeekCount" class="summary-value">0</p>
+            <p id="completedWeekCaption" class="summary-caption">Actividad de los últimos 7 días.</p>
+          </article>
+          <article class="summary-card summary-card-export">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-file"></use></svg></span>
+            <p class="summary-title">Pendientes de exportar</p>
+            <p id="pendingExportCount" class="summary-value">0</p>
+            <p id="pendingExportCaption" class="summary-caption">Completados sin PDF reciente.</p>
+          </article>
+          <article class="summary-card">
+            <span class="summary-card-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-layout"></use></svg></span>
+            <p class="summary-title">Plantillas de informes</p>
+            <p id="plantillasCount" class="summary-value">0</p>
+            <p id="plantillasCaption" class="summary-caption"></p>
+          </article>
+        </section>
+
+        <section class="quick-actions" aria-label="Acciones rapidas">
+          <button class="action-card" type="button" onclick="crearNuevoInforme()">
+            <span class="action-icon"><svg class="ui-icon"><use href="#icon-file-plus"></use></svg></span>
+            <span class="action-copy"><strong>Crear informe</strong><small>Comienza con una plantilla clínica</small></span><svg class="ui-icon action-arrow"><use href="#icon-chevron-right"></use></svg>
+          </button>
+          <button class="action-card" type="button" onclick="mostrarGestorPerfiles()">
+            <span class="action-icon"><svg class="ui-icon"><use href="#icon-layout"></use></svg></span>
+            <span class="action-copy"><strong>Plantillas</strong><small>Organiza y diseña tus formatos</small></span><svg class="ui-icon action-arrow"><use href="#icon-chevron-right"></use></svg>
+          </button>
+          <button class="action-card" type="button" onclick="showHistorial()">
+            <span class="action-icon"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
+            <span class="action-copy"><strong>Historial</strong><small>Consulta informes recientes</small></span><svg class="ui-icon action-arrow"><use href="#icon-chevron-right"></use></svg>
+          </button>
+          <button class="action-card trash-action-card" type="button" onclick="showPapelera()">
+            <span class="action-icon"><svg class="ui-icon"><use href="#icon-trash"></use></svg></span>
+            <span class="action-copy"><strong>Papelera</strong><small>Recupera elementos eliminados</small></span><svg class="ui-icon action-arrow"><use href="#icon-chevron-right"></use></svg>
+          </button>
+        </section>
+
+        <section class="activity" aria-label="Informes recientes">
+          <div class="activity-head">
+            <h2>Informes recientes</h2>
+            <span class="activity-badge">Todos</span>
+          </div>
+
+          <div class="activity-table" role="table" aria-label="Ultimos informes">
+            <div class="table-row table-head" role="row">
+              <span role="columnheader">Informe</span>
+              <span role="columnheader">Creacion</span>
+              <span role="columnheader">Ultima modificacion</span>
+              <span role="columnheader">Estado</span>
+              <span role="columnheader">Accion</span>
+            </div>
+            <div id="activityBody" class="activity-body"></div>
+          </div>
+          <nav id="dashboardPagination" class="app-pagination activity-pagination" aria-label="Páginas de actividad reciente"></nav>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="editor-view" style="display: none;">
+    <div class="editor-shell">
+      <header class="editor-header">
+        <div class="editor-nav-actions" aria-label="Navegacion del editor">
+          <button class="back-btn" type="button" onclick="volverDesdeEditor()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+          <button id="undoEditorButton" class="back-btn editor-history-btn" type="button" onclick="deshacerCambioEditor()" title="Deshacer" aria-label="Deshacer" disabled><svg class="ui-icon"><use href="#icon-undo"></use></svg></button>
+          <button id="redoEditorButton" class="back-btn editor-history-btn" type="button" onclick="rehacerCambioEditor()" title="Rehacer" aria-label="Rehacer" disabled><svg class="ui-icon"><use href="#icon-redo"></use></svg></button>
+        </div>
+        <div>
+          <h2 class="editor-title">Informe del paciente</h2>
+          <p id="editorEstado" class="editor-subtitle">Borrador sin guardar.</p>
+        </div>
+        <div class="editor-actions">
+          <button id="deletedPagesButton" class="editor-action-btn secondary deleted-pages-button" type="button" onclick="alternarPanelPaginasEliminadas()" disabled><svg class="ui-icon"><use href="#icon-pages"></use></svg>Páginas eliminadas (0)</button>
+          <button class="editor-action-btn secondary" type="button" onclick="agregarImagenesInforme()"><svg class="ui-icon"><use href="#icon-image"></use></svg>Agregar imágenes</button>
+          <button class="editor-action-btn secondary" type="button" onclick="mostrarVistaPreviaPDF()"><svg class="ui-icon"><use href="#icon-eye"></use></svg>Vista previa</button>
+          <button class="editor-action-btn" type="button" onclick="guardarInformePDF()"><svg class="ui-icon"><use href="#icon-save"></use></svg>Guardar PDF</button>
+          <input id="imagenesInformeInput" class="hidden-file-input" type="file" accept="image/*" multiple />
+        </div>
+      </header>
+
+      <nav id="wordRibbon" class="word-ribbon" aria-label="Herramientas de edición" style="display:none">
+        <div class="word-ribbon-tabs" role="tablist" aria-label="Cinta de opciones">
+          <button class="is-active" type="button" role="tab" aria-selected="true">Inicio</button>
+          <span class="word-ribbon-context">Formato del documento</span>
+        </div>
+        <div class="word-ribbon-tools" role="toolbar" aria-label="Formato de texto">
+          <div class="word-tool-group word-tool-history" aria-label="Historial">
+            <button type="button" onclick="deshacerCambioEditor()" title="Deshacer (Ctrl+Z)" aria-label="Deshacer"><svg class="ui-icon"><use href="#icon-undo"></use></svg></button>
+            <button type="button" onclick="rehacerCambioEditor()" title="Rehacer (Ctrl+Y)" aria-label="Rehacer"><svg class="ui-icon"><use href="#icon-redo"></use></svg></button>
+          </div>
+          <div class="word-tool-group word-tool-font" aria-label="Fuente">
+            <select data-word-command="fontName" onchange="aplicarFormatoWord('fontName', this.value)" aria-label="Fuente">
+              <option value="Arial">Arial</option><option value="Calibri">Calibri</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            </select>
+            <select data-word-command="fontSize" onchange="aplicarFormatoWord('fontSize', this.value)" aria-label="Tamaño de texto">
+              <option value="2">10</option><option value="3" selected>12</option><option value="4">14</option><option value="5">18</option><option value="6">24</option><option value="7">36</option>
+            </select>
+            <button type="button" data-word-state="bold" onclick="aplicarFormatoWord('bold')" title="Negrita (Ctrl+B)" aria-label="Negrita"><strong>N</strong></button>
+            <button type="button" data-word-state="italic" onclick="aplicarFormatoWord('italic')" title="Cursiva (Ctrl+I)" aria-label="Cursiva"><em>K</em></button>
+            <button type="button" data-word-state="underline" onclick="aplicarFormatoWord('underline')" title="Subrayado (Ctrl+U)" aria-label="Subrayado"><u>S</u></button>
+            <input type="color" value="#1f2730" title="Color del texto" aria-label="Color del texto" onchange="aplicarFormatoWord('foreColor', this.value)" />
+            <input type="color" value="#fff59d" title="Resaltado" aria-label="Color de resaltado" onchange="aplicarFormatoWord('hiliteColor', this.value)" />
+          </div>
+          <div class="word-tool-group" aria-label="Párrafo">
+            <button type="button" data-word-state="justifyLeft" onclick="aplicarFormatoWord('justifyLeft')" title="Alinear a la izquierda" aria-label="Alinear a la izquierda">≡</button>
+            <button type="button" data-word-state="justifyCenter" onclick="aplicarFormatoWord('justifyCenter')" title="Centrar" aria-label="Centrar">≡</button>
+            <button type="button" data-word-state="justifyRight" onclick="aplicarFormatoWord('justifyRight')" title="Alinear a la derecha" aria-label="Alinear a la derecha">≡</button>
+            <button type="button" data-word-state="justifyFull" onclick="aplicarFormatoWord('justifyFull')" title="Justificar" aria-label="Justificar">☰</button>
+            <button type="button" data-word-state="insertUnorderedList" onclick="aplicarFormatoWord('insertUnorderedList')" title="Lista con viñetas" aria-label="Lista con viñetas">•≡</button>
+            <button type="button" data-word-state="insertOrderedList" onclick="aplicarFormatoWord('insertOrderedList')" title="Lista numerada" aria-label="Lista numerada">1≡</button>
+            <button type="button" onclick="aplicarFormatoWord('outdent')" title="Reducir sangría" aria-label="Reducir sangría">←</button>
+            <button type="button" onclick="aplicarFormatoWord('indent')" title="Aumentar sangría" aria-label="Aumentar sangría">→</button>
+            <button type="button" onclick="aplicarFormatoWord('removeFormat')" title="Borrar formato" aria-label="Borrar formato">Tx</button>
+          </div>
+          <div class="word-tool-group word-tool-status" aria-live="polite">
+            <span id="wordSaveStatus">Listo</span>
+          </div>
+        </div>
+      </nav>
+
+      <section id="deletedPagesPanel" class="deleted-pages-panel" style="display:none" aria-label="Páginas eliminadas"></section>
+
+      <section class="editor-page-wrap">
+        <div class="editor-page" aria-label="Hoja carta del editor">
+          <div class="editor-page-inner">
+            <div class="report-template cover-template">
+              <section class="report-letter-page cover-page" aria-label="Portada del informe">
+                <header class="cover-title-block">
+                  <h1>INFORME</h1>
+                  <p>ECOGRÁFICO</p>
+                  <div class="cover-title-rule"></div>
+                </header>
+
+                <section class="cover-patient-band" aria-label="Datos del paciente">
+                  <div class="cover-data-grid">
+                    <label class="cover-field-row">
+                      <span>Fecha:</span>
+                      <input class="report-field cover-field" data-report-field="fecha" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Especie:</span>
+                      <input class="report-field cover-field" data-report-field="especie" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Nombre del Paciente:</span>
+                      <input class="report-field cover-field" data-report-field="paciente" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Raza:</span>
+                      <input class="report-field cover-field" data-report-field="raza" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Nombre del propietario:</span>
+                      <input class="report-field cover-field" data-report-field="propietario" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Sexo:</span>
+                      <input class="report-field cover-field" data-report-field="sexo" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Correo electrónico:</span>
+                      <input class="report-field cover-field" data-report-field="correo" type="text" />
+                    </label>
+                    <label class="cover-field-row">
+                      <span>Estado<br />Reproductivo:</span>
+                      <input class="report-field cover-field" data-report-field="estadoReproductivo" type="text" />
+                    </label>
+                    <span class="cover-field-row cover-empty-row" aria-hidden="true"></span>
+                    <label class="cover-field-row">
+                      <span>Edad:</span>
+                      <input class="report-field cover-field" data-report-field="edad" type="text" />
+                    </label>
+                  </div>
+                </section>
+
+                <footer class="cover-footer">
+                  <section class="cover-clinic">
+                    <img class="cover-logo" src="logo.png" alt="Huellitas" />
+                    <p>Clinica Veterinaria</p>
+                    <p>Avenida Luis Flores 483 - Copiapó</p>
+                  </section>
+
+                  <section class="cover-doctor">
+                    <input class="report-field cover-doctor-name" data-report-field="medico" type="text" readonly tabindex="-1" />
+                    <label class="cover-doctor-line">
+                      <span>RUT:</span>
+                      <input class="report-field cover-doctor-value" data-report-field="rutMedico" type="text" readonly tabindex="-1" />
+                    </label>
+                    <label class="cover-doctor-line">
+                      <span>N° de Registro Colegio Médico Veterinario</span>
+                      <input class="report-field cover-doctor-value cover-register-value" data-report-field="registroMedico" type="text" readonly tabindex="-1" />
+                    </label>
+                  </section>
+                </footer>
+              </section>
+
+              <section class="report-letter-page body-page" aria-label="Antecedentes y resultados">
+                <section class="body-antecedents">
+                  <h2>ANTECEDENTES</h2>
+                  <div class="body-thin-rule"></div>
+                  <textarea class="report-field body-field body-antecedents-field" data-report-field="antecedentes" rows="3"></textarea>
+                </section>
+
+                <section class="body-results-header">
+                  <h2>ECOGRAFÍA ABDOMINAL <span>| RESULTADOS</span></h2>
+                  <div class="body-white-rule"></div>
+                </section>
+
+                <section class="body-results">
+                  <textarea class="report-field body-field body-results-field" data-report-field="resultados"></textarea>
+                </section>
+
+                <footer class="body-page-footer">
+                  <span class="body-footer-mark"></span>
+                  <strong>2</strong>
+                </footer>
+              </section>
+
+              <section class="report-letter-page body-page body-conclusion-page" aria-label="Conclusiones y detalles adicionales">
+                <section class="body-conclusion-header">
+                  <h2>CONCLUSIONES <span>| DETALLES ADICIONALES</span></h2>
+                  <div class="body-conclusion-rule"></div>
+                </section>
+
+                <section class="body-conclusion-content">
+                  <textarea class="report-field body-field body-conclusion-field" data-report-field="conclusion" wrap="soft"></textarea>
+                </section>
+
+                <section class="body-observations-panel">
+                  <strong>Observaciones:</strong>
+                  <textarea class="report-field body-field body-observations-field" data-report-field="observaciones" wrap="soft"></textarea>
+                </section>
+
+                <footer class="body-page-footer">
+                  <span class="body-footer-mark"></span>
+                  <strong>3</strong>
+                </footer>
+              </section>
+
+              <section id="diplomadosPage" class="report-letter-page eco-diplomas-page is-hidden" aria-label="Diplomados y formacion complementaria">
+                <section class="eco-diplomas-card">
+                  <div class="eco-diplomas-signature">
+                    <p class="eco-doctor-name" data-credential-output="firmaSimple"></p>
+                    <p>RUT: <span data-credential-output="rutMedico"></span></p>
+                    <p>N° de Registro Colegio Médico Veterinario <span data-credential-output="registroMedico"></span></p>
+                    <div class="eco-section-rule"></div>
+                  </div>
+                  <div class="eco-diplomas-text" data-diplomas-output="principal"></div>
+                </section>
+
+                <section class="eco-diplomas-side">
+                  <div class="eco-diplomas-text" data-diplomas-output="lateral"></div>
+                </section>
+
+                <footer class="eco-page-footer"><span></span><strong></strong></footer>
+              </section>
+
+              <div id="reportImagesPages" class="report-images-pages"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="historial-view" style="display: none;">
+    <div class="historial-shell">
+      <header class="editor-header historial-header">
+        <button class="back-btn" type="button" onclick="showDashboard()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+        <div>
+          <h2 class="editor-title">Historial de informes</h2>
+          <p class="editor-subtitle">Consulta informes guardados y filtralos por fecha.</p>
+        </div>
+      </header>
+
+      <section class="historial-panel">
+        <div class="historial-toolbar">
+          <div>
+            <h2 class="listing-title">Informes guardados</h2>
+            <p id="historialCaption" class="listing-subtitle">No hay filtros aplicados.</p>
+          </div>
+
+          <div class="historial-controls">
+            <label class="date-control" for="historialFecha">
+              <span>Fecha</span>
+              <input id="historialFecha" type="date" />
+            </label>
+            <label class="sort-control" for="historialOrden">
+              <span>Ordenar</span>
+              <select id="historialOrden">
+                <option value="recientes">Mas recientes</option>
+                <option value="antiguos">Mas antiguos</option>
+              </select>
+            </label>
+            <button class="clear-filter-btn" type="button" onclick="limpiarFiltrosHistorial()">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="historial-table" role="table" aria-label="Historial de informes">
+          <div class="table-row table-head historial-row" role="row">
+            <span role="columnheader">Informe</span>
+            <span role="columnheader">Creacion</span>
+            <span role="columnheader">Ultima modificacion</span>
+            <span role="columnheader">Estado</span>
+            <span role="columnheader">Accion</span>
+          </div>
+          <div id="historialBody" class="historial-body"></div>
+        </div>
+        <nav id="historialPagination" class="app-pagination" aria-label="Páginas del historial"></nav>
+      </section>
+    </div>
+  </div>
+
+  <div id="papelera-view" style="display: none;">
+    <div class="historial-shell">
+      <header class="editor-header historial-header">
+        <button class="back-btn" type="button" onclick="showDashboard()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+        <div>
+          <h2 class="editor-title">Papelera</h2>
+          <p class="editor-subtitle">Recupera informes eliminados o borralos definitivamente.</p>
+        </div>
+      </header>
+
+      <section class="historial-panel">
+        <div class="historial-toolbar">
+          <div>
+            <h2 class="listing-title">Informes eliminados</h2>
+            <p id="papeleraCaption" class="listing-subtitle">No hay informes en papelera.</p>
+          </div>
+
+          <div class="historial-controls">
+            <button class="clear-filter-btn danger" type="button" onclick="vaciarPapeleraInformes()">Vaciar papelera</button>
+          </div>
+        </div>
+
+        <div class="historial-table" role="table" aria-label="Papelera de informes">
+          <div class="table-row table-head papelera-row" role="row">
+            <span role="columnheader">Informe</span>
+            <span role="columnheader">Creacion</span>
+            <span role="columnheader">Eliminado</span>
+            <span role="columnheader">Estado</span>
+            <span role="columnheader">Accion</span>
+          </div>
+          <div id="papeleraBody" class="historial-body"></div>
+        </div>
+        <nav id="papeleraPagination" class="app-pagination" aria-label="Páginas de la papelera"></nav>
+      </section>
+    </div>
+  </div>
+
+  <div id="pdf-preview-modal" class="preview-modal" style="display: none;">
+    <div class="preview-backdrop" onclick="cerrarVistaPreviaPDF()"></div>
+    <section class="preview-dialog" aria-label="Vista previa de PDF">
+      <header class="preview-header">
+        <div>
+          <h2 class="editor-title">Vista previa PDF</h2>
+          <p class="editor-subtitle">Revisa el formato antes de guardar.</p>
+        </div>
+        <div class="preview-actions">
+          <button class="editor-action-btn secondary" type="button" onclick="cerrarVistaPreviaPDF()">Cerrar</button>
+          <button id="pdfPreviewSaveButton" class="editor-action-btn" type="button" onclick="guardarInformePDF()">Guardar PDF</button>
+        </div>
+      </header>
+      <div id="pdfPreviewContent" class="preview-content"></div>
+    </section>
+  </div>
+
+  <div id="draft-confirm-modal" class="preview-modal" style="display: none;">
+    <div class="preview-backdrop"></div>
+    <section class="preview-dialog confirm-dialog" aria-label="Confirmar borrador">
+      <header class="preview-header">
+        <div>
+          <h2 class="editor-title">Hay contenido sin guardar</h2>
+          <p class="editor-subtitle">¿Deseas guardar este informe como borrador antes de volver al inicio?</p>
+        </div>
+        <div class="preview-actions">
+          <button class="editor-action-btn secondary" type="button" onclick="responderConfirmacionBorrador(false)">Descartar</button>
+          <button class="editor-action-btn" type="button" onclick="responderConfirmacionBorrador(true)">Guardar borrador</button>
+        </div>
+      </header>
+    </section>
+  </div>
+
+  <div id="diplomados-modal" class="preview-modal" style="display: none;">
+    <div class="preview-backdrop" onclick="cerrarPlantillaDiplomados()"></div>
+    <section class="preview-dialog diplomas-dialog" aria-label="Agregar diplomados">
+      <header class="preview-header">
+        <div>
+          <h2 class="editor-title">Agregar diplomados</h2>
+          <p class="editor-subtitle">Elige el tipo y completa los datos que apareceran en los informes.</p>
+        </div>
+        <div class="preview-actions">
+          <button class="editor-action-btn secondary" type="button" onclick="cerrarPlantillaDiplomados()">Cerrar</button>
+          <button id="guardarDiplomadosButton" class="editor-action-btn" type="button" onclick="guardarDiplomadosConfiguracion()">Guardar Cambios</button>
+        </div>
+      </header>
+      <div class="diplomas-manager">
+        <section id="diplomasTypePicker" class="diplomas-type-picker">
+          <button class="diplomas-choice-btn" type="button" onclick="abrirEditorDiplomadosTipo('cursados')">
+            <span>Diplomados cursados</span>
+            <small>Se muestran como diplomados ya completados.</small>
+          </button>
+          <button class="diplomas-choice-btn" type="button" onclick="abrirEditorDiplomadosTipo('enCurso')">
+            <span>Diplomados en curso</span>
+            <small>Se muestran en la columna de estudios actuales.</small>
+          </button>
+        </section>
+
+        <section id="diplomasFormPanel" class="diplomas-form-panel" style="display: none;">
+          <div class="diplomas-form-head">
+            <div>
+              <h3 id="diplomasFormTitle">Diplomados</h3>
+              <p id="diplomasFormHelp" class="editor-subtitle">Completa diplomado e institucion. Puedes agregar varias filas.</p>
+            </div>
+            <button class="config-btn secondary" type="button" onclick="volverSelectorDiplomados()">Cambiar tipo</button>
+          </div>
+          <div id="diplomasRows" class="diplomas-rows"></div>
+          <button class="config-btn" type="button" onclick="agregarFilaDiplomado()">Agregar diplomado</button>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="configuracion-view" style="display: none;">
+    <div class="config-shell">
+      <header class="editor-header config-header">
+        <button class="back-btn" type="button" onclick="showDashboard()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+        <div>
+          <h2 class="editor-title">Configuración</h2>
+          <p id="configHeaderSubtitle" class="editor-subtitle">Personaliza la apariencia y el funcionamiento del sistema.</p>
+        </div>
+      </header>
+
+      <main class="config-sections">
+        <aside class="config-navigation" aria-label="Categorías de configuración">
+          <div class="config-navigation-heading"><span>Preferencias</span><strong>Configuración</strong></div>
+          <nav class="config-navigation-list" role="tablist" aria-orientation="vertical" onkeydown="manejarTeclaNavegacionConfiguracion(event)">
+            <button class="config-nav-button is-active" type="button" role="tab" aria-selected="true" aria-controls="configThemeSection" data-config-nav="apariencia" onclick="mostrarSeccionConfiguracion('apariencia')"><span><svg class="ui-icon"><use href="#icon-palette"></use></svg></span><span><strong>Apariencia</strong><small>Temas y colores</small></span></button>
+            <button class="config-nav-button" type="button" role="tab" aria-selected="false" aria-controls="configLabelsSection" data-config-nav="etiquetas" onclick="mostrarSeccionConfiguracion('etiquetas')"><span><svg class="ui-icon"><use href="#icon-file-plus"></use></svg></span><span><strong>Etiquetas</strong><small>Colores para informes</small></span></button>
+            <button class="config-nav-button" type="button" role="tab" aria-selected="false" aria-controls="configCredentialsSection" data-config-nav="identidad" onclick="mostrarSeccionConfiguracion('identidad')"><span><svg class="ui-icon"><use href="#icon-star"></use></svg></span><span><strong>Identidad</strong><small>Datos, firma y clínica</small></span></button>
+            <button class="config-nav-button" type="button" role="tab" aria-selected="false" aria-controls="configSystemSection" data-config-nav="sistema" onclick="mostrarSeccionConfiguracion('sistema')"><span><svg class="ui-icon"><use href="#icon-file"></use></svg></span><span><strong>Datos y respaldo</strong><small>Importar y exportar</small></span></button>
+            <button class="config-nav-button" type="button" role="tab" aria-selected="false" aria-controls="configHelpSection" data-config-nav="ayuda" onclick="mostrarSeccionConfiguracion('ayuda')"><span><svg class="ui-icon"><use href="#icon-book"></use></svg></span><span><strong>Ayuda</strong><small>Tutorial y manual</small></span></button>
+          </nav>
+          <p class="config-navigation-note">Los cambios de apariencia se guardan automáticamente.</p>
+        </aside>
+        <div class="config-content">
+        <section id="configHelpSection" class="config-section config-help-section config-page" data-config-page="ayuda" role="tabpanel" aria-labelledby="configHelpTitle" hidden>
+          <div class="config-help-copy">
+            <span>Ayuda y aprendizaje</span>
+            <h2 id="configHelpTitle" class="config-title">Conoce el sistema</h2>
+            <p class="config-subtitle">Realiza un recorrido guiado por la aplicación o consulta el manual completo en una ventana independiente.</p>
+          </div>
+          <div class="config-help-actions">
+            <button id="startTutorialButton" class="config-btn" type="button" onclick="iniciarTutorialInteractivo()"><svg class="ui-icon"><use href="#icon-play"></use></svg> Iniciar tutorial</button>
+            <button id="openManualButton" class="config-btn secondary" type="button" onclick="abrirManualUsuario()"><svg class="ui-icon"><use href="#icon-book"></use></svg> Abrir manual de usuario</button>
+          </div>
+          <p id="tutorialCompletionStatus" class="tutorial-completion-status"></p>
+        </section>
+
+        <section id="configThemeSection" class="config-section theme-settings-section config-page is-active" data-config-page="apariencia" role="tabpanel" aria-labelledby="configThemeTitle">
+          <div class="config-section-head theme-section-head">
+            <div>
+              <span class="config-eyebrow">Apariencia</span>
+              <h2 id="configThemeTitle" class="config-title">Elige el ambiente de trabajo</h2>
+              <p class="config-subtitle">El tema adapta colores, superficies, controles y estados en toda la aplicación. No modifica el diseño impreso de tus plantillas.</p>
+            </div>
+            <span id="activeThemeLabel" class="active-theme-label" aria-live="polite"></span>
+          </div>
+          <div class="appearance-mode-control">
+            <span class="appearance-mode-icon" aria-hidden="true">☀</span>
+            <span class="appearance-mode-copy"><strong>Modo de interfaz</strong><small>Usa la versión clara u oscura de cualquier paleta.</small></span>
+            <label class="theme-mode-switch" for="themeModeToggle">
+              <input id="themeModeToggle" type="checkbox" role="switch" aria-label="Activar modo oscuro" onchange="cambiarModoTema(this.checked)" />
+              <span class="theme-mode-track"><span class="theme-mode-thumb"></span></span>
+              <span id="themeModeLabel">Claro</span>
+            </label>
+          </div>
+          <div id="themeSelector" class="theme-selector" role="radiogroup" aria-label="Tema visual">
+            <button class="theme-option theme-huellitas" type="button" data-theme-option="huellitas" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('huellitas')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Huellitas</strong><small>Natural y profesional</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+            <button class="theme-option theme-oceano" type="button" data-theme-option="oceano" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('oceano')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Océano</strong><small>Azul claro y preciso</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+            <button class="theme-option theme-lavanda" type="button" data-theme-option="lavanda" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('lavanda')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Lavanda</strong><small>Sereno y contemporáneo</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+            <button class="theme-option theme-terracota" type="button" data-theme-option="terracota" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('terracota')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Terracota</strong><small>Cálido y acogedor</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+            <button class="theme-option theme-cerezo" type="button" data-theme-option="cerezo" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('cerezo')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Cerezo</strong><small>Rosa suave y elegante</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+            <button class="theme-option theme-ambar" type="button" data-theme-option="ambar" role="radio" aria-checked="false" onclick="seleccionarTemaAplicacion('ambar')"><span class="theme-preview"><i></i><i></i><i></i><i></i></span><span class="theme-option-copy"><strong>Ámbar</strong><small>Dorado cálido y enérgico</small></span><span class="theme-option-check"><svg class="ui-icon"><use href="#icon-check"></use></svg></span></button>
+          </div>
+        </section>
+
+        <section id="configLabelsSection" class="config-section config-page" data-config-page="etiquetas" role="tabpanel" aria-labelledby="configLabelsTitle" hidden>
+          <div class="config-section-head">
+            <div>
+              <span class="config-eyebrow">Etiquetas de informes</span>
+              <h2 id="configLabelsTitle" class="config-title">Guarda los colores de cada examen</h2>
+              <p class="config-subtitle">Crea una etiqueta una sola vez y selecciónala después desde el editor de plantillas.</p>
+            </div>
+          </div>
+          <form id="reportLabelForm" class="report-label-form" onsubmit="guardarEtiquetaInforme(event)">
+            <input id="reportLabelEditId" type="hidden" />
+            <label class="report-label-name"><span>Nombre de la etiqueta</span><input id="reportLabelName" class="config-input" type="text" maxlength="60" placeholder="Ej: Hemograma" required /></label>
+            <label class="report-label-color"><span>Color</span><input id="reportLabelColor" type="color" value="#4c626c" aria-label="Color de la etiqueta" /></label>
+            <div class="report-label-preview-wrap"><span>Vista previa</span><output id="reportLabelPreview" class="report-label-preview">Nueva etiqueta</output></div>
+            <div class="report-label-form-actions"><button id="reportLabelSaveButton" class="config-btn" type="submit">Crear etiqueta</button><button id="reportLabelCancelButton" class="config-btn secondary" type="button" onclick="cancelarEdicionEtiquetaInforme()" hidden>Cancelar</button></div>
+          </form>
+          <div class="report-labels-heading"><strong>Etiquetas disponibles</strong><small id="reportLabelsCount">0 etiquetas</small></div>
+          <div id="reportLabelsList" class="report-labels-list" aria-live="polite"></div>
+        </section>
+
+        <section id="configSystemSection" class="config-section config-page" data-config-page="sistema" role="tabpanel" aria-labelledby="configSistemaTitle" hidden>
+          <div class="config-section-head">
+            <div>
+              <span class="config-eyebrow">Datos y respaldo</span>
+              <h2 id="configSistemaTitle" class="config-title">Protege y traslada tus plantillas</h2>
+              <p class="config-subtitle">Elige una acción. Ninguna importación reemplaza automáticamente tu biblioteca actual.</p>
+            </div>
+          </div>
+
+          <div class="config-actions config-action-grid">
+            <button class="config-action-tile" type="button" onclick="exportarPlantillas()"><span class="config-action-icon"><svg class="ui-icon"><use href="#icon-file"></use></svg></span><span><strong>Exportar plantillas</strong><small>Crea un respaldo seleccionando las plantillas que necesitas.</small></span><svg class="ui-icon config-action-arrow"><use href="#icon-chevron-right"></use></svg></button>
+            <button class="config-action-tile" type="button" onclick="importarPlantillas()"><span class="config-action-icon"><svg class="ui-icon"><use href="#icon-file-plus"></use></svg></span><span><strong>Importar plantillas</strong><small>Incorpora un respaldo sin borrar tu biblioteca actual.</small></span><svg class="ui-icon config-action-arrow"><use href="#icon-chevron-right"></use></svg></button>
+            <input id="importTemplatesInput" class="hidden-file-input" type="file" accept="application/json,.json" />
+            <button class="config-action-tile is-danger" type="button" onclick="restablecerAjustes()"><span class="config-action-icon"><svg class="ui-icon"><use href="#icon-trash"></use></svg></span><span><strong>Restablecer ajustes</strong><small>Elimina informes y preferencias locales; conserva las plantillas.</small></span><svg class="ui-icon config-action-arrow"><use href="#icon-chevron-right"></use></svg></button>
+          </div>
+        </section>
+
+        <section id="configCredentialsSection" class="config-section config-page" data-config-page="identidad" role="tabpanel" aria-labelledby="configCredencialesTitle" hidden>
+          <div class="config-section-head">
+            <div>
+              <span class="config-eyebrow">Identidad profesional</span>
+              <h2 id="configCredencialesTitle" class="config-title">Datos que reutilizas en cada informe</h2>
+              <p class="config-subtitle">Completa esta información una vez para rellenar automáticamente portadas y bloques de identidad.</p>
+            </div>
+          </div>
+
+          <div class="config-subsection-heading"><span>1</span><div><strong>Datos profesionales y contacto</strong><small>Información escrita que aparecerá en tus documentos.</small></div></div>
+          <div class="credentials-form">
+            <label class="credential-field" for="firmaModeSelect"><span>Modo de firma</span><select id="firmaModeSelect" class="config-input"><option value="simple">Firma Simple</option><option value="png">Firma PNG</option></select></label>
+            <label class="credential-field" for="firmaSimpleInput">
+              <span>Firma simple</span>
+              <input id="firmaSimpleInput" class="config-input" type="text" placeholder="Dr. Nombre Apellido" />
+            </label>
+
+            <label class="credential-field" for="rutMedicoInput">
+              <span>R.U.T.</span>
+              <input id="rutMedicoInput" class="config-input" type="text" placeholder="12.345.678-9" />
+            </label>
+
+            <label class="credential-field" for="registroMedicoInput">
+              <span>N° de Registro Colegio Medico Veterinario</span>
+              <input id="registroMedicoInput" class="config-input" type="text" placeholder="1234" />
+            </label>
+
+            <label class="credential-field credential-field-wide" for="direccionClinicaInput">
+              <span>Dirección de la clínica</span>
+              <input id="direccionClinicaInput" class="config-input" type="text" placeholder="Av. Principal 123, ciudad" />
+            </label>
+
+            <label class="credential-field" for="telefonoClinicaInput">
+              <span>Teléfono de la clínica</span>
+              <input id="telefonoClinicaInput" class="config-input" type="tel" placeholder="+56 9 1234 5678" />
+            </label>
+
+            <div class="credentials-actions">
+              <button id="guardarCredencialesButton" class="config-btn" type="button" onclick="guardarCredenciales()">Guardar Cambios</button>
+              <button class="config-btn credentials-template-btn" type="button" onclick="abrirPlantillaDiplomados()">Agregar diplomados</button>
+            </div>
+          </div>
+
+          <div class="config-subsection-heading"><span>2</span><div><strong>Firma digital</strong><small>Imagen opcional para los bloques de firma.</small></div></div>
+          <div class="signature-uploader">
+            <label class="signature-drop" for="firmaDigitalInput">
+              <input id="firmaDigitalInput" type="file" accept="image/*" />
+              <span class="signature-drop-icon"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
+              <span>Cargar firma digital</span>
+            </label>
+            <div class="signature-preview">
+              <img id="firmaPreview" alt="Vista previa de firma digital" />
+              <span id="firmaPlaceholder">Sin firma cargada</span>
+            </div>
+            <button class="config-btn config-btn-danger signature-delete-btn" type="button" onclick="eliminarFirmaDigital()">Eliminar firma digital</button>
+          </div>
+
+          <div class="config-media-divider" aria-hidden="true"></div>
+
+          <div class="config-media-group">
+            <div class="config-media-copy">
+              <h3><span class="config-subsection-number">3</span> Logo de la clínica</h3>
+              <p>Sube una imagen cuadrada o rectangular. El bloque de logo la adaptará sin recortarla.</p>
+            </div>
+            <div class="logo-uploader">
+              <label class="signature-drop logo-drop" for="logoClinicaInput">
+                <input id="logoClinicaInput" type="file" accept="image/*" />
+                <span class="signature-drop-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-image"></use></svg></span>
+                <span>Cargar logo</span>
+              </label>
+              <div class="signature-preview logo-config-preview">
+                <img id="logoClinicaPreview" alt="Vista previa del logo de la clínica" />
+                <span id="logoClinicaPlaceholder">Sin logo cargado</span>
+              </div>
+              <button class="config-btn config-btn-danger signature-delete-btn" type="button" onclick="eliminarLogoClinica()">Eliminar logo</button>
+            </div>
+          </div>
+        </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="perfiles-view" style="display: none;">
+    <div class="config-shell">
+      <header class="editor-header config-header">
+        <button class="back-btn" type="button" onclick="showDashboard()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+        <div>
+          <h2 class="editor-title">Plantillas de informes</h2>
+          <p class="editor-subtitle">Crea, organiza y configura los moldes utilizados en los informes de pacientes.</p>
+        </div>
+        <div class="profiles-header-actions">
+          <button class="editor-action-btn secondary" type="button" onclick="abrirCrearColeccion()"><svg class="ui-icon"><use href="#icon-folder"></use></svg>Nueva colección</button>
+          <button class="primary-btn" onclick="crearNuevoPerfil()"><svg class="ui-icon"><use href="#icon-file-plus"></use></svg>Crear plantilla</button>
+        </div>
+      </header>
+      <main class="profiles-manager-layout">
+        <aside class="collections-sidebar" aria-label="Colecciones de plantillas">
+          <div class="collections-sidebar-brand">
+            <span aria-hidden="true"><svg class="ui-icon"><use href="#icon-folder"></use></svg></span>
+            <span><strong>Biblioteca</strong><small>Organiza tus formatos</small></span>
+          </div>
+          <div class="collections-sidebar-head"><strong>Colecciones</strong><button type="button" onclick="abrirCrearColeccion()" title="Crear colección" aria-label="Crear colección"><svg class="ui-icon"><use href="#icon-plus"></use></svg></button></div>
+          <nav id="collectionsList" class="collections-list"></nav>
+          <p class="collections-sidebar-note">Arrastra una o varias plantillas sobre una colección para organizarlas.</p>
+        </aside>
+        <section class="profiles-workspace">
+          <div class="profiles-toolbar">
+            <div class="profiles-toolbar-copy"><span class="profiles-eyebrow">Biblioteca de formatos</span><h3 id="activeCollectionTitle">Todas las plantillas</h3><p id="activeCollectionCaption">Organiza y encuentra tus moldes rápidamente.</p></div>
+            <label class="profiles-search"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-search"></use></svg></span><input id="profilesSearchInput" type="search" placeholder="Buscar nombre, bloque o campo…" aria-label="Buscar plantillas por nombre, bloque o campo" oninput="actualizarBusquedaPlantillas(this.value)" /></label>
+          </div>
+          <div id="profilesSelectionBar" class="profiles-selection-bar" aria-live="polite">
+            <button id="selectProfilesPageButton" class="profiles-select-page" type="button" onclick="alternarSeleccionPaginaPlantillas()"><span class="profiles-select-page-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-select-page"></use></svg></span><span>Seleccionar esta página</span></button>
+            <span id="profilesSelectionStatus">Selecciona varias plantillas para arrastrarlas juntas.</span>
+            <button id="clearProfilesSelectionButton" class="profiles-clear-selection" type="button" onclick="limpiarSeleccionPlantillas()" hidden>Limpiar selección</button>
+          </div>
+          <div id="perfiles-card-container" class="profiles-grid" aria-live="polite"></div>
+          <nav id="profilesPagination" class="app-pagination" aria-label="Páginas de plantillas"></nav>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="designer-view" style="display: none;">
+    <div class="config-shell">
+      <header class="editor-header config-header">
+        <button class="back-btn" type="button" onclick="volverDesdeDisenador()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Volver</button>
+        <div>
+          <h2 id="designerProfileName" class="editor-title">Diseñador de plantilla</h2>
+          <p class="editor-subtitle">Maqueta las hojas, bloques y elementos visuales del molde.</p>
+        </div>
+        <button id="saveDesignerButton" class="primary-btn" type="button" onclick="guardarPlantillaConValidacion()">Guardar plantilla</button>
+      </header>
+      <main class="template-designer-layout">
+        <aside class="designer-toolbox">
+          <div class="designer-sidebar-heading">
+            <span class="designer-sidebar-icon" aria-hidden="true"><svg class="ui-icon"><use href="#icon-layout"></use></svg></span>
+            <span><strong id="designerSidebarTemplateName">Plantilla</strong><small>Hoja A4 · cuadrícula de 20 px</small></span>
+          </div>
+          <div class="designer-primary-actions">
+            <button class="add-blank-page-btn" type="button" onclick="agregarHojaEnBlanco()"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-plus"></use></svg></span><span><strong>Nueva hoja</strong><small>Agrega una página A4</small></span></button>
+            <button type="button" onclick="validarPlantillaActiva(true)"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-check"></use></svg></span><span><strong>Revisar</strong><small>Detecta problemas</small></span></button>
+            <button type="button" onclick="previsualizarDesbordamientoPlantilla()"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-flow"></use></svg></span><span><strong>Flujo</strong><small>Prevé páginas extra</small></span></button>
+          </div>
+          <nav class="designer-sidebar-nav" aria-label="Secciones del diseñador">
+            <button class="is-active" data-designer-section="paginas" type="button" onclick="enfocarSeccionSidebarDisenador('paginas', this)"><svg class="ui-icon"><use href="#icon-pages"></use></svg><span>Páginas</span></button>
+            <button data-designer-section="bloques" type="button" onclick="enfocarSeccionSidebarDisenador('bloques', this)"><svg class="ui-icon"><use href="#icon-plus"></use></svg><span>Bloques</span></button>
+            <button data-designer-section="apariencia" type="button" onclick="enfocarSeccionSidebarDisenador('apariencia', this)"><svg class="ui-icon"><use href="#icon-palette"></use></svg><span>Apariencia</span></button>
+            <button data-designer-section="avanzado" type="button" onclick="enfocarSeccionSidebarDisenador('avanzado', this)"><svg class="ui-icon"><use href="#icon-layers"></use></svg><span>Avanzado</span></button>
+          </nav>
+          <details class="designer-controls-section" open>
+            <summary><span><svg class="ui-icon"><use href="#icon-palette"></use></svg>Apariencia de la hoja</span><small>Colores y cuadrícula</small></summary>
+            <section class="designer-page-controls">
+            <label>Color de fondo<span class="color-picker-row"><input id="designerPageColor" type="color" value="#ffffff" onchange="cambiarColorGlobalDisenador(this, 'fondo')" /><input id="designerPageColorValue" class="hex-color-input" type="text" value="#ffffff" maxlength="7" spellcheck="false" aria-label="Hexadecimal del color de fondo" onchange="cambiarColorGlobalDisenador(this, 'fondo')" onkeydown="confirmarHexColorConEnter(event)" /></span></label>
+            <label>Color de énfasis<span class="color-picker-row"><input id="designerAccentColor" type="color" value="#66bc00" onchange="cambiarColorGlobalDisenador(this, 'enfasis')" /><input id="designerAccentColorValue" class="hex-color-input" type="text" value="#66bc00" maxlength="7" spellcheck="false" aria-label="Hexadecimal del color de énfasis" onchange="cambiarColorGlobalDisenador(this, 'enfasis')" onkeydown="confirmarHexColorConEnter(event)" /></span></label>
+            <label class="grid-snap-toggle designer-grid-toggle"><input id="gridSnapToggle" type="checkbox" checked onchange="cambiarAjusteCuadricula(this)" /><span>Ajustar bloques a la cuadrícula</span></label>
+            </section>
+          </details>
+          <details class="designer-assistant" open>
+            <summary><span><svg class="ui-icon"><use href="#icon-layers"></use></svg>Herramientas avanzadas</span><small>Edición y reutilización</small></summary>
+            <div class="designer-assistant-grid">
+              <button type="button" title="Copiar los bloques seleccionados" onclick="copiarBloquesSeleccionados()"><svg class="ui-icon"><use href="#icon-copy"></use></svg>Copiar</button>
+              <button type="button" title="Pegar los bloques copiados en la página activa" onclick="pegarBloquesDisenador()"><svg class="ui-icon"><use href="#icon-layers"></use></svg>Pegar</button>
+              <button type="button" title="Alinear por la izquierda los bloques seleccionados" onclick="alinearSeleccionDisenador('izquierda')"><svg class="ui-icon"><use href="#icon-align-left"></use></svg>Alinear</button>
+              <button type="button" title="Bloquear o desbloquear la selección" onclick="alternarBloqueoSeleccionDisenador()"><svg class="ui-icon"><use href="#icon-lock"></use></svg>Bloquear</button>
+              <button type="button" title="Guardar la selección como componente reutilizable" onclick="guardarComponenteDisenador()"><svg class="ui-icon"><use href="#icon-save"></use></svg>Componente</button>
+              <button type="button" title="Insertar un componente guardado" onclick="insertarComponenteDisenador()"><svg class="ui-icon"><use href="#icon-plus"></use></svg>Insertar</button>
+              <button type="button" title="Revisar o restaurar versiones guardadas" onclick="mostrarHistorialVersionesPlantilla()"><svg class="ui-icon"><use href="#icon-clock"></use></svg>Versiones</button>
+            </div>
+            <small>Ctrl o Cmd + clic permite seleccionar varios bloques.</small>
+          </details>
+          <details class="designer-navigator" open>
+            <summary><span><svg class="ui-icon"><use href="#icon-pages"></use></svg>Páginas y capas</span><small id="designerNavigatorCount">0</small></summary>
+            <div id="designerNavigatorList" class="designer-navigator-list"></div>
+          </details>
+          <section id="designerDeletedPagesPanel" class="designer-deleted-pages" style="display:none"></section>
+          <section id="designerCatalogPanel" class="designer-context-panel">
+            <div class="designer-section-heading"><span><strong>Agregar bloques</strong><small>Elementos de la plantilla</small></span><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-plus"></use></svg></span></div>
+            <label class="designer-catalog-search"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-search"></use></svg></span><input id="designerCatalogSearch" type="search" placeholder="Buscar bloque…" aria-label="Buscar bloque" oninput="filtrarCatalogoDisenador(this.value)" /></label>
+            <div id="designerCatalogEmpty" class="designer-catalog-empty" hidden>No encontramos bloques con ese nombre.</div>
+            <details class="designer-category"><summary><span>Texto</span><small>3</small></summary><div>
+              <button data-block-label="Título principal" type="button" onclick="agregarBloquePlantilla('bloque-titulo-principal')"><span><svg class="ui-icon"><use href="#icon-type"></use></svg></span>Título principal</button>
+              <button data-block-label="Cuadro de texto libre" type="button" onclick="agregarBloquePlantilla('bloque-texto-libre')"><span><svg class="ui-icon"><use href="#icon-text"></use></svg></span>Cuadro de texto</button>
+              <button data-block-label="Encabezado subtítulo" type="button" onclick="agregarBloquePlantilla('bloque-encabezado')"><span><svg class="ui-icon"><use href="#icon-heading"></use></svg></span>Encabezado</button>
+            </div></details>
+            <details class="designer-category"><summary><span>Datos clínicos</span><small>2</small></summary><div>
+              <button data-block-label="Datos paciente ficha campos rellenables" type="button" onclick="agregarBloquePlantilla('bloque-datos-paciente')"><span><svg class="ui-icon"><use href="#icon-user"></use></svg></span>Datos del paciente</button>
+              <button data-block-label="Tabla mediciones datos clínicos" type="button" onclick="agregarBloquePlantilla('bloque-tabla-moderna')"><span><svg class="ui-icon"><use href="#icon-table"></use></svg></span>Tabla moderna</button>
+            </div></details>
+            <details class="designer-category"><summary><span>Imágenes</span><small>2</small></summary><div>
+              <button data-block-label="Cuadrícula imágenes fotografías" type="button" onclick="agregarBloquePlantilla('bloque-imagenes-grid')"><span><svg class="ui-icon"><use href="#icon-grid"></use></svg></span>Cuadrícula de imágenes</button>
+              <button data-block-label="Imagen banner horizontal" type="button" onclick="agregarBloquePlantilla('bloque-banner')"><span><svg class="ui-icon"><use href="#icon-image"></use></svg></span>Imagen / banner</button>
+              <button data-block-label="Logo clínica imagen" type="button" onclick="agregarBloquePlantilla('bloque-logo')"><span><svg class="ui-icon"><use href="#icon-image"></use></svg></span>Logo de la clínica</button>
+            </div></details>
+            <details class="designer-category"><summary><span>Identidad</span><small>3</small></summary><div>
+              <button data-block-label="Identidad profesional médico firma" type="button" onclick="agregarBloquePlantilla('bloque-identidad')"><span><svg class="ui-icon"><use href="#icon-user"></use></svg></span>Identidad profesional</button>
+              <button data-block-label="Información clínica contacto" type="button" onclick="agregarBloquePlantilla('bloque-clinica')"><span><svg class="ui-icon"><use href="#icon-building"></use></svg></span>Información de la clínica</button>
+              <button data-block-label="Diplomados credenciales" type="button" onclick="agregarBloquePlantilla('bloque-diplomados')"><span><svg class="ui-icon"><use href="#icon-award"></use></svg></span>Diplomados</button>
+            </div></details>
+            <details class="designer-category"><summary><span>Diseño</span><small>1</small></summary><div>
+              <button data-block-label="Figuras formas línea flecha círculo" type="button" onclick="agregarBloquePlantilla('bloque-figura')"><span><svg class="ui-icon"><use href="#icon-shapes"></use></svg></span>Figuras y formas</button>
+            </div></details>
+          </section>
+          <section id="designerBlockPanel" class="designer-context-panel designer-block-panel" style="display:none" aria-live="polite"></section>
+        </aside>
+        <section id="designerBlocks" class="designer-canvas" aria-label="Estructura de la plantilla"></section>
+      </main>
+    </div>
+  </div>
+
+  <div id="new-profile-modal" class="preview-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="newProfileTitle">
+    <div class="preview-backdrop" onclick="cerrarModalNuevoPerfil()"></div>
+    <section class="new-profile-dialog">
+      <header>
+        <h2 id="newProfileTitle">Crear nueva plantilla</h2>
+        <p id="newProfileDescription">Asigna un nombre reconocible. Luego podrás agregar y configurar sus bloques.</p>
+      </header>
+      <label class="new-profile-field" for="newProfileName">
+        <span>Nombre de la plantilla</span>
+        <input id="newProfileName" type="text" maxlength="80" autocomplete="off" placeholder="Ej: Informe Ecográfico Abdominal" onkeydown="manejarTeclaNuevoPerfil(event)" />
+      </label>
+      <p id="newProfileError" class="new-profile-error" role="alert"></p>
+      <footer>
+        <button class="editor-action-btn secondary" type="button" onclick="cerrarModalNuevoPerfil()">Cancelar</button>
+        <button id="newProfileConfirmButton" class="editor-action-btn" type="button" onclick="confirmarNuevoPerfil()">Crear y configurar</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="profile-selector-modal" class="preview-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="profileSelectorTitle" onkeydown="manejarTeclaSelectorPerfiles(event)">
+    <div class="preview-backdrop" onclick="cerrarSelectorPerfiles()"></div>
+    <section class="profile-selector-dialog">
+      <header class="profile-selector-head">
+        <div>
+          <h2 id="profileSelectorTitle">Crear informe para paciente</h2>
+          <p>Selecciona el molde que se utilizará para rellenar el nuevo informe clínico.</p>
+        </div>
+        <button class="profile-selector-close" type="button" onclick="cerrarSelectorPerfiles()" aria-label="Cerrar"><svg class="ui-icon"><use href="#icon-close"></use></svg></button>
+      </header>
+      <label class="profile-selector-search"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-search"></use></svg></span><input id="profileSelectorSearch" type="search" placeholder="Buscar por nombre o colección…" aria-label="Buscar plantilla" oninput="renderizarSelectorPerfiles(this.value)" /></label>
+      <div id="profileSelectorList" class="profile-selector-list"></div>
+    </section>
+  </div>
+
+  <div id="template-transfer-modal" class="preview-modal template-transfer-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="templateTransferTitle" onkeydown="manejarTeclaTransferenciaPlantillas(event)">
+    <div class="preview-backdrop" onclick="cerrarTransferenciaPlantillas()"></div>
+    <section class="template-transfer-dialog">
+      <header class="template-transfer-header">
+        <div><span id="templateTransferEyebrow">Plantillas</span><h2 id="templateTransferTitle">Seleccionar plantillas</h2><p id="templateTransferDescription">Elige las plantillas que deseas procesar.</p></div>
+        <button type="button" onclick="cerrarTransferenciaPlantillas()" aria-label="Cerrar"><svg class="ui-icon"><use href="#icon-close"></use></svg></button>
+      </header>
+      <div class="template-transfer-toolbar">
+        <label class="template-transfer-select-all"><input id="templateTransferSelectAll" type="checkbox" onchange="alternarSeleccionTotalTransferencia(this.checked)" /><span>Seleccionar todo</span></label>
+        <label class="profiles-search"><span aria-hidden="true"><svg class="ui-icon"><use href="#icon-search"></use></svg></span><input id="templateTransferSearch" type="search" placeholder="Buscar plantilla o colección…" aria-label="Buscar plantillas" oninput="filtrarTransferenciaPlantillas(this.value)" /></label>
+      </div>
+      <div id="templateTransferList" class="template-transfer-list" aria-live="polite"></div>
+      <footer class="template-transfer-footer">
+        <span id="templateTransferCount">0 seleccionadas</span>
+        <div><button class="editor-action-btn secondary" type="button" onclick="cerrarTransferenciaPlantillas()">Cancelar</button><button id="templateTransferConfirm" class="editor-action-btn" type="button" onclick="confirmarTransferenciaPlantillas()" disabled>Continuar</button></div>
+      </footer>
+    </section>
+  </div>
+
+  <div id="interactive-tutorial" class="interactive-tutorial" style="display:none" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+    <div class="tutorial-dimmer" aria-hidden="true"></div>
+    <div id="tutorialSpotlight" class="tutorial-spotlight" aria-hidden="true"></div>
+    <section id="tutorialCard" class="tutorial-card">
+      <header><span id="tutorialStepLabel">Recorrido interactivo</span><button type="button" onclick="finalizarTutorialInteractivo(false)" aria-label="Cerrar tutorial">×</button></header>
+      <div id="tutorialProgress" class="tutorial-progress" aria-hidden="true"><span id="tutorialProgressBar"></span></div>
+      <div id="tutorialWelcome" class="tutorial-welcome">
+        <span class="tutorial-welcome-icon"><svg class="ui-icon"><use href="#icon-play"></use></svg></span>
+        <span>Guía interactiva</span>
+        <h2 id="tutorialTitle">¿Qué quieres aprender?</h2>
+        <p>Te mostraremos cada herramienta dentro de la aplicación. No se modificarán tus informes ni plantillas.</p>
+        <div class="tutorial-route-list">
+          <button type="button" onclick="comenzarTutorialInteractivo('esencial')"><span><strong>Recorrido esencial</strong><small>Lo imprescindible para comenzar · 8 pasos</small></span><b>5 min</b></button>
+          <button type="button" onclick="comenzarTutorialInteractivo('completo')"><span><strong>Recorrido completo</strong><small>Organización, diseño y configuración</small></span><b>7 min</b></button>
+          <button id="tutorialResumeButton" class="tutorial-resume-route" type="button" onclick="reanudarTutorialInteractivo()" style="display:none"><span><strong>Continuar donde quedé</strong><small id="tutorialResumeCaption"></small></span><b>Continuar</b></button>
+        </div>
+        <p class="tutorial-privacy-note">Puedes salir con <kbd>Esc</kbd> y continuar más tarde.</p>
+      </div>
+      <div id="tutorialStepContent" class="tutorial-step-content" style="display:none">
+        <div class="tutorial-copy">
+          <div class="tutorial-copy-heading"><span id="tutorialStepIcon" class="tutorial-step-icon"><svg class="ui-icon"><use href="#icon-layout"></use></svg></span><span id="tutorialEyebrow">Bienvenida</span></div>
+          <h2 id="tutorialStepTitle">Conoce el sistema</h2>
+          <p id="tutorialText"></p>
+          <div id="tutorialActionHint" class="tutorial-action-hint"></div>
+        </div>
+        <div class="tutorial-position" aria-live="polite"><span id="tutorialSectionLabel"></span><span id="tutorialDots"></span></div>
+      </div>
+      <footer id="tutorialFooter" style="display:none"><button id="tutorialPreviousButton" class="editor-action-btn secondary" type="button" onclick="retrocederTutorial()"><svg class="ui-icon"><use href="#icon-arrow-left"></use></svg> Anterior</button><button class="tutorial-skip" type="button" onclick="finalizarTutorialInteractivo(false)">Guardar y salir</button><button id="tutorialNextButton" class="editor-action-btn" type="button" onclick="avanzarTutorial()">Siguiente</button></footer>
+    </section>
+  </div>
+
+  <div id="app-message-modal" class="preview-modal app-message-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="appMessageTitle">
+    <div class="preview-backdrop"></div>
+    <section class="app-message-dialog">
+      <div id="appMessageIcon" class="app-message-icon" aria-hidden="true">!</div>
+      <div class="app-message-copy">
+        <h2 id="appMessageTitle">Confirmación</h2>
+        <p id="appMessageText"></p>
+      </div>
+      <div class="app-message-actions">
+        <button id="appMessageCancel" class="editor-action-btn secondary" type="button">Cancelar</button>
+        <button id="appMessageConfirm" class="editor-action-btn" type="button">Aceptar</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app-core.js"></script>
+  <script src="renderer.js"></script>
+  <script src="productivity.js"></script>
+</body>
+</html>
