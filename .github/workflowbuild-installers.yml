@@ -1,0 +1,92 @@
+name: Generar instaladores
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Crear icono macOS desde logo.png
+        shell: bash
+        run: |
+          mkdir -p build/icon.iconset
+          cp logo.png build/logo-source.png
+          sips -z 900 900 build/logo-source.png --out build/logo-scaled.png
+          sips --padToHeightWidth 1024 1024 --padColor FFFFFF build/logo-scaled.png --out build/icon-square.png
+          sips -z 16 16 build/icon-square.png --out build/icon.iconset/icon_16x16.png
+          sips -z 32 32 build/icon-square.png --out build/icon.iconset/icon_16x16@2x.png
+          sips -z 32 32 build/icon-square.png --out build/icon.iconset/icon_32x32.png
+          sips -z 64 64 build/icon-square.png --out build/icon.iconset/icon_32x32@2x.png
+          sips -z 128 128 build/icon-square.png --out build/icon.iconset/icon_128x128.png
+          sips -z 256 256 build/icon-square.png --out build/icon.iconset/icon_128x128@2x.png
+          sips -z 256 256 build/icon-square.png --out build/icon.iconset/icon_256x256.png
+          sips -z 512 512 build/icon-square.png --out build/icon.iconset/icon_256x256@2x.png
+          sips -z 512 512 build/icon-square.png --out build/icon.iconset/icon_512x512.png
+          cp build/icon-square.png build/icon.iconset/icon_512x512@2x.png
+          iconutil -c icns build/icon.iconset -o build/icon.icns
+
+      - name: Generar DMG
+        run: npm run dist:mac:${{ matrix.arch }} -- --config.directories.output=dist/installers
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Subir instalador macOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: Generador-Informes-macOS-${{ matrix.arch }}
+          path: dist/installers/*-${{ matrix.arch }}.dmg
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Generar instalador NSIS
+        run: npm run dist:win:x64 -- --config.directories.output=dist/installers
+
+      - name: Subir instalador Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: Generador-Informes-Windows-x64
+          path: dist/installers/*-x64.exe
+          if-no-files-found: error
