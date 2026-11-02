@@ -1,7 +1,7 @@
 # generador-informes
 
 Para generar instaladores, abrir **Actions → Generar instaladores → Run workflow**
-en GitHub. También se generan al subir un tag que empiece por `v`.
+en GitHub. También se generan al subir cambios a `main` o un tag que empiece por `v`.
 
 Cada ejecución publica tres artifacts independientes:
 

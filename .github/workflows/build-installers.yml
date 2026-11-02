@@ -3,16 +3,22 @@ name: Generar instaladores
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
 permissions:
   contents: read
 
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
 jobs:
   macos:
     name: macOS ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -29,10 +35,10 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Crear icono macOS desde logo.png
         shell: bash
@@ -67,7 +73,8 @@ jobs:
 
   windows:
     name: Windows x64
-    runs-on: windows-latest
+    runs-on: windows-2022
+    timeout-minutes: 30
 
     steps:
       - name: Descargar codigo
@@ -76,10 +83,10 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Generar instalador NSIS
         run: npm run dist:win:x64 -- --config.directories.output=dist/installers
