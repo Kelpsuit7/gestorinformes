@@ -5,7 +5,13 @@ const path = require('path');
 let ventanaPrincipal;
 let ventanaManual;
 let reloadTimer;
-const rutaLogoAplicacion = path.join(__dirname, 'logo.ico');
+const rutaLogoAplicacion = path.join(__dirname, process.platform === 'win32' ? 'logo.ico' : 'logo.png');
+
+function mostrarErrorInicio(error) {
+  console.error('No se pudo iniciar Generador de Informes:', error);
+  dialog.showErrorBox('No se pudo cargar Generador de Informes',
+    `La interfaz no pudo iniciarse. Comparte este mensaje para revisar el problema:\n\n${error?.message || String(error)}`);
+}
 
 function crearVentanaPrincipal() {
   ventanaPrincipal = new BrowserWindow({
@@ -23,16 +29,17 @@ function crearVentanaPrincipal() {
     }
   });
 
-  ventanaPrincipal.loadFile(path.join(__dirname, 'index.html'));
   ventanaPrincipal.webContents.on('console-message', (_event, level, message, line, sourceId) => {
     console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
   });
   ventanaPrincipal.webContents.on('render-process-gone', (_event, details) => {
     console.error('El proceso renderer termino inesperadamente:', details);
+    mostrarErrorInicio(new Error(`El proceso de la interfaz terminó: ${details.reason} (código ${details.exitCode}).`));
   });
   ventanaPrincipal.on('closed', () => {
     ventanaPrincipal = null;
   });
+  ventanaPrincipal.loadFile(path.join(__dirname, 'index.html')).catch(mostrarErrorInicio);
 }
 
 function abrirManualUsuario() {
@@ -145,7 +152,8 @@ ipcMain.handle('abrir-manual-usuario', () => {
 
 app.whenReady().then(() => {
   app.setAppUserModelId('com.huellitas.generadorinformes');
-  if (process.platform === 'darwin' && app.dock) app.dock.setIcon(rutaLogoAplicacion);
+  // El instalador ya incluye el icono .icns del Dock. En desarrollo usamos PNG.
+  if (process.platform === 'darwin' && !app.isPackaged && app.dock) app.dock.setIcon(rutaLogoAplicacion);
   crearVentanaPrincipal();
   if (!app.isPackaged) activarRecargaAutomatica();
 
@@ -154,7 +162,7 @@ app.whenReady().then(() => {
       crearVentanaPrincipal();
     }
   });
-});
+}).catch(mostrarErrorInicio);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
