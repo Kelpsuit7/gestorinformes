@@ -397,10 +397,48 @@
     const progress = document.getElementById('reportChecklistProgress');
     const items = document.getElementById('reportChecklistItems');
     if (progress) progress.innerHTML = `<div><strong>${checklist.completed} de ${checklist.total}</strong><span>requisitos completos</span></div><span class="checklist-progress-track"><i style="width:${Math.round((checklist.completed / Math.max(1, checklist.total)) * 100)}%"></i></span>`;
-    if (items) items.innerHTML = checklist.items.map((item) => `<button class="checklist-item ${item.ok ? 'is-ok' : item.required ? 'is-missing' : 'is-optional'}" type="button" ${item.field ? `onclick="enfocarCampoChecklist('${item.field}')"` : 'disabled'}><span>${item.ok ? '✓' : item.required ? '!' : '·'}</span><span><strong>${escapeHtml(item.label)}</strong><small>${item.ok ? 'Listo' : item.required ? 'Requiere revisión' : 'Opcional'}</small></span></button>`).join('');
+    if (items) {
+      const saved = getJson('categoriasChecklist', {}) || {};
+      const defaults = { paciente: 'Datos del paciente', fecha: 'Datos del paciente', propietario: 'Datos del paciente', antecedentes: 'Evaluación clínica', resultados: 'Evaluación clínica', conclusion: 'Evaluación clínica', imagenes: 'Evaluación clínica', identidad: 'Presentación del informe', plantilla: 'Presentación del informe' };
+      const groups = new Map();
+      checklist.items.forEach(item => {
+        const title = core.cleanText(saved[item.id]?.title) || item.label;
+        const category = core.cleanText(saved[item.id]?.category) || defaults[item.id] || 'General';
+        const key = core.normalizeSearch(category);
+        if (!groups.has(key)) groups.set(key, { category, items: [] });
+        groups.get(key).items.push({ ...item, title });
+      });
+      items.innerHTML = Array.from(groups.values()).map((group, index) => `<section class="checklist-category" aria-labelledby="checklistCategory${index}">
+        <h3 id="checklistCategory${index}">${escapeHtml(group.category)} <small>${group.items.length}</small></h3>
+        ${group.items.map(item => `<div class="checklist-entry">
+          <button class="checklist-item ${item.ok ? 'is-ok' : item.required ? 'is-missing' : 'is-optional'}" type="button" ${item.field ? `onclick="enfocarCampoChecklist('${item.field}')"` : 'disabled'}><span>${item.ok ? '✓' : item.required ? '!' : '·'}</span><span><strong>${escapeHtml(item.title)}</strong>${item.title !== item.label ? `<small>${escapeHtml(item.label)}</small>` : ''}<small>${item.ok ? 'Listo' : item.required ? 'Requiere revisión' : 'Opcional'}</small></span></button>
+          <details class="checklist-edit"><summary>Editar título y categoría</summary><form onsubmit="guardarClasificacionChecklist(event, '${item.id}')">
+            <label>Título de la indicación<input name="titulo" value="${escapeHtml(item.title)}" maxlength="120" required /></label>
+            <label>Categoría<input name="categoria" value="${escapeHtml(group.category)}" list="checklistCategoryOptions" maxlength="80" required /></label>
+            <button class="editor-action-btn secondary" type="submit">Guardar</button>
+          </form></details></div>`).join('')}
+        </section>`).join('') + `<datalist id="checklistCategoryOptions">${Array.from(groups.values()).map(group => `<option value="${escapeHtml(group.category)}"></option>`).join('')}</datalist>`;
+    }
     const finalize = document.getElementById('checklistFinalizeButton');
     if (finalize) finalize.disabled = !checklist.ready;
     return checklist;
+  }
+
+  function guardarClasificacionChecklist(event, id) {
+    event.preventDefault();
+    if (!currentChecklist().items.some(item => item.id === id)) return;
+    const form = event.currentTarget;
+    const title = core.cleanText(form.elements.titulo.value).slice(0, 120);
+    const category = core.cleanText(form.elements.categoria.value).slice(0, 80);
+    if (!title || !category) {
+      notify('Escribe un título y una categoría.', 'info');
+      return;
+    }
+    const saved = getJson('categoriasChecklist', {}) || {};
+    saved[id] = { title, category };
+    setJson('categoriasChecklist', saved);
+    renderChecklist();
+    notify('Título y categoría guardados para los checklist.');
   }
 
   function abrirChecklistInforme() {
@@ -726,6 +764,7 @@
     renderSelectorTextos,
     insertarTextoClinico,
     abrirChecklistInforme,
+    guardarClasificacionChecklist,
     cerrarChecklistInforme,
     enfocarCampoChecklist,
     guardarBorradorDesdeBarra,
